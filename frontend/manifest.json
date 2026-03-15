@@ -1,0 +1,54 @@
+{
+  "manifest_version": 3,
+  "name": "Cyber-Aggression Detector",
+  "version": "1.0.0",
+  "description": "Real-time cyber-aggression detection using Naive Bayes and VADER.",
+
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "tabs",
+    "downloads"
+  ],
+
+  "host_permissions": [
+    "http://localhost:5000/*",
+    "<all_urls>"
+  ],
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "lib/naive_bayes.js",
+        "lib/vader.js",
+        "modules/algorithm_selector.js",
+        "modules/custom_filter.js",
+        "modules/result_display.js",
+        "content.js"
+      ],
+      "css": ["styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16":  "assets/icon16.png",
+      "48":  "assets/icon48.png",
+      "128": "assets/icon128.png"
+    }
+  },
+
+  "icons": {
+    "16":  "assets/icon16.png",
+    "48":  "assets/icon48.png",
+    "128": "assets/icon128.png"
+  }
+}

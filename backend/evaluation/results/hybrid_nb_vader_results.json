@@ -1,0 +1,13 @@
+{
+  "model": "Hybrid NB VADER",
+  "accuracy": 0.9166,
+  "precision": 0.9163,
+  "recall": 0.7333,
+  "f1_score": 0.8147,
+  "fp_rate": 0.0223,
+  "fn_rate": 0.2667,
+  "tp": 3569,
+  "tn": 14277,
+  "fp": 326,
+  "fn": 1298
+}

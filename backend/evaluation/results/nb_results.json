@@ -1,0 +1,6 @@
+{
+  "mode": "Naive Bayes Only",
+  "precision": 0.8696,
+  "recall": 0.7641,
+  "f1_score": 0.8135
+}

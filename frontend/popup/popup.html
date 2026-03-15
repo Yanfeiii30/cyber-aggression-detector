@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CAD Shield</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+
+  <!-- ── Header ──────────────────────────────────────────────── -->
+  <header>
+    <div class="header-left">
+      <div class="logo-wrap">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z" fill="rgba(255,255,255,0.2)" stroke="white" stroke-width="1.5"/>
+          <path d="M9 12l2 2 4-4" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div>
+        <h1>CAD Shield</h1>
+        <p class="subtitle">Cyber-Aggression Detector</p>
+      </div>
+    </div>
+    <label class="switch">
+      <input type="checkbox" id="toggleEnabled" checked />
+      <span class="slider"></span>
+    </label>
+  </header>
+
+  <!-- ── Status ──────────────────────────────────────────────── -->
+  <div id="statusBar" class="status-bar status-on">
+    <span class="status-dot" id="statusDot"></span>
+    <span id="statusText">Protection Active</span>
+    <span class="status-right" id="platformBadge"></span>
+  </div>
+
+  <!-- ── Stats ───────────────────────────────────────────────── -->
+  <div class="stats-row">
+    <div class="stat-box"><span class="stat-num" id="statTotal">0</span><span class="stat-label">Scanned</span></div>
+    <div class="stat-box danger"><span class="stat-num" id="statAggressive">0</span><span class="stat-label">Blocked</span></div>
+    <div class="stat-box safe"><span class="stat-num" id="statSafe">0</span><span class="stat-label">Safe</span></div>
+  </div>
+
+  <!-- ── Tabs ────────────────────────────────────────────────── -->
+  <div class="tabs">
+    <button class="tab active" data-tab="detection">Detection</button>
+    <button class="tab" data-tab="log">Live Log</button>
+    <button class="tab" data-tab="test">Test</button>
+    <button class="tab" data-tab="settings">Settings</button>
+  </div>
+
+  <!-- ── Tab: Detection ──────────────────────────────────────── -->
+  <div class="tab-panel active" id="tab-detection">
+    <div class="algo-buttons">
+      <button class="algo-btn active" data-mode="hybrid">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="4" cy="8" r="3" stroke="currentColor" stroke-width="1.4"/><circle cx="12" cy="8" r="3" stroke="currentColor" stroke-width="1.4"/><path d="M7 8h2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+        Hybrid
+      </button>
+      <button class="algo-btn" data-mode="nb">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="2" y="10" width="2.5" height="4" rx="1" fill="currentColor"/><rect x="6.5" y="6" width="2.5" height="8" rx="1" fill="currentColor"/><rect x="11" y="2" width="2.5" height="12" rx="1" fill="currentColor"/></svg>
+        Naive Bayes
+      </button>
+      <button class="algo-btn" data-mode="vader">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/><path d="M5 9.5c.8 1 2 1.5 3 1.5s2.2-.5 3-1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="6" cy="7" r="1" fill="currentColor"/><circle cx="10" cy="7" r="1" fill="currentColor"/></svg>
+        VADER
+      </button>
+    </div>
+    <p class="algo-desc" id="algoDesc">Naive Bayes + VADER combined (recommended)</p>
+
+    <!-- Performance Monitor -->
+    <div class="perf-bar">
+      <div class="perf-item">
+        <span class="perf-icon">⚡</span>
+        <span class="perf-label">Avg Speed</span>
+        <span class="perf-val" id="perfAvg">—</span>
+      </div>
+      <div class="perf-item">
+        <span class="perf-icon">🏃</span>
+        <span class="perf-label">Fastest</span>
+        <span class="perf-val" id="perfMin">—</span>
+      </div>
+      <div class="perf-item">
+        <span class="perf-icon">🐢</span>
+        <span class="perf-label">Slowest</span>
+        <span class="perf-val" id="perfMax">—</span>
+      </div>
+    </div>
+
+    <!-- Score panel -->
+    <div class="score-panel">
+      <div class="score-row">
+        <div class="score-box" id="scoreNB">
+          <span class="score-label">Naive Bayes</span>
+          <span class="score-val" id="nbValue">—</span>
+          <span class="score-chip" id="nbBadge"></span>
+        </div>
+        <div class="score-box" id="scoreVADER">
+          <span class="score-label">VADER</span>
+          <span class="score-val" id="vaderValue">—</span>
+          <span class="score-chip" id="vaderBadge"></span>
+        </div>
+        <div class="score-box score-hybrid" id="scoreHybrid">
+          <span class="score-label">Hybrid R-Score</span>
+          <span class="score-val" id="hybridValue">—</span>
+          <span class="score-chip" id="hybridBadge"></span>
+        </div>
+      </div>
+      <p class="score-note" id="algoResultNote">Browse any page to see live scores</p>
+    </div>
+
+    <!-- Why blurred panel -->
+    <div class="why-panel" id="whyPanel" style="display:none;">
+      <div class="why-title">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="#b91c1c" stroke-width="1.4"/><path d="M8 5v4" stroke="#b91c1c" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="11.5" r="0.8" fill="#b91c1c"/></svg>
+        Why was this content blocked?
+      </div>
+      <div class="why-text" id="whyText"></div>
+      <div class="why-reasons" id="whyReasons"></div>
+    </div>
+  </div>
+
+  <!-- ── Tab: Live Log ───────────────────────────────────────── -->
+  <div class="tab-panel" id="tab-log">
+    <div class="log-header">
+      <span class="log-count" id="logCount">0 detections</span>
+      <div style="display:flex;gap:5px;">
+        <button class="ghost-btn report-btn" id="viewReport">&#x1F4CA; Report</button>
+        <button class="ghost-btn" id="clearLog">Clear</button>
+      </div>
+    </div>
+    <div id="liveLog" class="live-log">
+      <div class="log-empty">No detections yet — browse any page.</div>
+    </div>
+  </div>
+
+  <!-- ── Tab: Test ───────────────────────────────────────────── -->
+  <div class="tab-panel" id="tab-test">
+    <p class="test-hint">Type any text to analyze it with all 3 algorithms at once.</p>
+    <div class="test-row">
+      <input type="text" id="testInput" placeholder="e.g. You are so stupid!" />
+    </div>
+    <button class="full-btn" id="testBtn">Analyze Text</button>
+    <div id="testResult" class="test-result hidden"></div>
+    <div id="testBreakdown" class="test-breakdown hidden">
+      <div class="breakdown-row">
+        <span class="breakdown-label">Naive Bayes</span>
+        <div class="breakdown-bar-wrap"><div class="breakdown-bar nb-bar" id="nbBar"></div></div>
+        <span class="breakdown-pct" id="nbPct">0%</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-label">VADER</span>
+        <div class="breakdown-bar-wrap"><div class="breakdown-bar vader-bar" id="vaderBar"></div></div>
+        <span class="breakdown-pct" id="vaderPct">0%</span>
+      </div>
+      <div class="breakdown-row">
+        <span class="breakdown-label">Hybrid</span>
+        <div class="breakdown-bar-wrap"><div class="breakdown-bar hybrid-bar" id="hybridBar"></div></div>
+        <span class="breakdown-pct" id="hybridPct">0%</span>
+      </div>
+      <div class="threshold-line" id="thresholdLine">
+        <span>Threshold: 50%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Tab: Settings ───────────────────────────────────────── -->
+  <div class="tab-panel" id="tab-settings">
+    <div class="setting-section">
+      <div class="setting-label">Detection Sensitivity</div>
+      <div class="slider-wrap">
+        <div class="slider-row">
+          <span class="slider-lbl">Threshold</span>
+          <span class="slider-val" id="thresholdVal">50%</span>
+        </div>
+        <input type="range" id="thresholdSlider" min="30" max="70" value="50" step="5" />
+        <div class="slider-hints">
+          <span>30% — Strict</span>
+          <span>50% — Balanced</span>
+          <span>70% — Lenient</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="setting-section" style="margin-top:12px;">
+      <div class="setting-label">Whitelist (Always Safe)</div>
+      <p class="settings-hint-sm">Words added here will never be flagged — even if aggressive.</p>
+      <div class="keyword-row">
+        <input type="text" id="whitelistInput" placeholder="Add a word to whitelist…" />
+        <button class="primary-btn" id="addWhitelistBtn">Add</button>
+      </div>
+      <ul id="whitelistList"></ul>
+    </div>
+
+    <div class="setting-section" style="margin-top:12px;">
+      <div class="setting-label">Custom Keywords</div>
+      <div class="keyword-row">
+        <input type="text" id="keywordInput" placeholder="Add a word to always filter…" />
+        <button class="primary-btn" id="addKeywordBtn">Add</button>
+      </div>
+      <ul id="keywordList"></ul>
+    </div>
+  </div>
+
+  <!-- ── Footer ──────────────────────────────────────────────── -->
+  <footer>
+    <span>Pamantasan ng Cabuyao</span>
+    <span class="sep">·</span>
+    <span>BSCS Thesis 2026</span>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
