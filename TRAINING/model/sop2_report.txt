@@ -1,0 +1,76 @@
+SOP 2 EVALUATION REPORT
+=================================================================
+Title  : Real-Time Cyber-Aggression Detection and Mitigation
+         Using Naive Bayes and VADER in a Chrome Extension
+School : Pamantasan ng Cabuyao -- BSCS Thesis 2026
+Tool   : Python scikit-learn (industry standard ML library)
+Date   : 2026-07-23 18:06:14
+
+DATASET INFORMATION
+=================================================================
+Total Samples  : 64900
+Training Set   : 51920 samples (80%)
+Test Set       : 12980 samples (20%)
+Vocabulary     : 99561 words
+Split Method   : Stratified train_test_split (random_state=42)
+Threshold      : 0.5 (NB / VADER / Hybrid — same cutoff, see predict_hybrid)
+
+HOW RESULTS WERE OBTAINED
+=================================================================
+1. Dataset was loaded from dataset.csv
+2. Dataset was split 80/20 using scikit-learn train_test_split
+3. Naive Bayes was trained on the training set
+4. All 3 models (NB, VADER, Hybrid) tested on unseen test set
+5. scikit-learn metrics computed Precision, Recall, F1-Score
+6. Results below are from scikit-learn classification_report()
+
+Naive Bayes Only -- Classification Report
+=================================================================
+                precision    recall  f1-score   support
+
+Non-Aggressive       0.92      0.96      0.94      9735
+    Aggressive       0.87      0.76      0.81      3245
+
+     macro avg       0.89      0.86      0.87     12980
+  weighted avg       0.91      0.91      0.91     12980
+
+VADER Only -- Classification Report
+=================================================================
+                precision    recall  f1-score   support
+
+Non-Aggressive       0.86      0.86      0.86      9735
+    Aggressive       0.58      0.58      0.58      3245
+
+     macro avg       0.72      0.72      0.72     12980
+  weighted avg       0.79      0.79      0.79     12980
+
+Hybrid (NB + VADER) -- Classification Report
+=================================================================
+                precision    recall  f1-score   support
+
+Non-Aggressive       0.91      0.98      0.94      9735
+    Aggressive       0.91      0.73      0.81      3245
+
+     macro avg       0.91      0.85      0.88     12980
+  weighted avg       0.91      0.91      0.91     12980
+
+COMPARISON TABLE (SOP 2)
+=================================================================
+Metric             NB Only   VADER Only     Hybrid
+--------------------------------------------------
+Precision           86.73%       57.73%     90.65%
+Recall              75.72%       58.43%     72.63%
+F1-Score            80.85%       58.08%     80.65%
+
+CONCLUSION
+=================================================================
+Naive Bayes Only achieved the highest F1-score of the three approaches
+this run. The Hybrid model still achieves the highest precision
+(90.65%), trading a small amount of recall/F1 for
+substantially fewer false positives -- see prediction-time heuristics
+in predict_hybrid() (English-language filter, self-directed-distress
+dampening) for what drives that trade-off.
+
+Formula : R_score = 0.6 x NB_probability + 0.4 x VADER_score
+Decision (NB / VADER) : R_score >= 0.5 -> AGGRESSIVE, R_score < 0.5 -> SAFE
+Decision (Hybrid)     : R_score >= 0.5 -> AGGRESSIVE, R_score < 0.5 -> SAFE

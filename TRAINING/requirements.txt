@@ -1,0 +1,15 @@
+# ── Cyber-Aggression Detector — Dependencies ──────────────────────────────
+# Install all with: pip install -r requirements.txt
+# Compatible with Python 3.13
+
+# Machine Learning
+scikit-learn==1.6.1
+joblib==1.4.2
+numpy==2.2.4
+
+# Natural Language Processing
+nltk==3.9.1
+vaderSentiment==3.3.2
+
+# Data handling
+pandas==2.2.3

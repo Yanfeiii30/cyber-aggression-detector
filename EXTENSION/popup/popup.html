@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CAD Shield</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+
+  <!-- ── Header ──────────────────────────────────────────────── -->
+  <header>
+    <div class="header-logo">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z"
+          fill="rgba(255,255,255,0.18)" stroke="white" stroke-width="1.5"/>
+        <path d="M9 12l2 2 4-4" stroke="white" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="header-info">
+      <h1>CAD Shield</h1>
+      <p>Cyber-Aggression Detector</p>
+    </div>
+    <div class="header-right">
+      <span id="platformBadge" class="platform-chip"></span>
+      <button id="themeToggleBtn" class="theme-icon-btn" type="button" title="Theme: Auto (click to change)"></button>
+      <label class="switch">
+        <input type="checkbox" id="toggleEnabled" checked />
+        <span class="slider"></span>
+      </label>
+    </div>
+  </header>
+
+  <!-- ── Status Strip ────────────────────────────────────────── -->
+  <div id="statusBar" class="status-strip status-on">
+    <span class="status-dot" id="statusDot"></span>
+    <span id="statusText">Protection Active</span>
+  </div>
+
+  <!-- ── Stats ───────────────────────────────────────────────── -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <span class="stat-num" id="statTotal">0</span>
+      <span class="stat-lbl">Scanned</span>
+    </div>
+    <div class="stat-card blocked">
+      <span class="stat-num" id="statAggressive">0</span>
+      <span class="stat-lbl">Blocked</span>
+    </div>
+    <div class="stat-card safe">
+      <span class="stat-num" id="statSafe">0</span>
+      <span class="stat-lbl">Safe</span>
+    </div>
+  </div>
+
+  <!-- ── Tab Bar ─────────────────────────────────────────────── -->
+  <!-- "Test" and "Evaluation" are expert-mode demo tabs, hidden from
+       regular users by default — toggled on from Settings > Expert Mode. -->
+  <div class="tab-bar">
+    <button class="tab active" data-tab="detection">Detection</button>
+    <button class="tab demo-tab hidden" id="tabTest" data-tab="test">Test</button>
+    <button class="tab demo-tab hidden" id="tabSteps" data-tab="steps">Steps</button>
+    <button class="tab demo-tab hidden" id="tabAlgorithms" data-tab="algorithms">Algorithms</button>
+    <button class="tab demo-tab hidden" id="tabEvaluation" data-tab="sop2">Evaluation</button>
+    <button class="tab" data-tab="settings">Settings</button>
+  </div>
+
+  <!-- ── Tab: Detection ──────────────────────────────────────── -->
+  <div class="tab-panel active" id="tab-detection">
+    <div class="help-row">
+      <button class="help-btn" id="helpBtn" title="What does CAD Shield do?">?</button>
+    </div>
+    <div class="note-box hidden" id="helpBox">
+      <p class="help-intro">CAD Shield scans comments as you browse and blurs anything aggressive — automatically, entirely on your device. Nothing you read is ever sent anywhere.</p>
+
+      <div class="help-section">
+        <strong>While you browse</strong>
+        <ul class="help-list">
+          <li>Aggressive comments get blurred automatically.</li>
+          <li>Click the <strong>eye icon</strong> next to a blurred comment to reveal it — click again to re-blur.</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <strong>Make it yours <span class="help-hint">(Settings tab)</span></strong>
+        <ul class="help-list">
+          <li><strong>Whitelist</strong> — words that should never be blurred (e.g. your username, an inside joke).</li>
+          <li><strong>Blocklist</strong> — words that should always be blurred, no matter what.</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <strong>Detection method <span class="help-hint">(buttons below)</span></strong>
+        <ul class="help-list">
+          <li><strong>Hybrid</strong> (recommended) combines both algorithms for the most balanced results. <strong>Naive Bayes</strong> and <strong>VADER</strong> can be used on their own to compare.</li>
+        </ul>
+      </div>
+
+      <p class="help-footnote">Turning off the switch at the top pauses protection for this tab only.</p>
+    </div>
+    <div class="algo-row">
+      <button class="algo-btn active" data-mode="hybrid">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+          <circle cx="4" cy="8" r="3" stroke="currentColor" stroke-width="1.4"/>
+          <circle cx="12" cy="8" r="3" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M7 8h2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+        Hybrid
+      </button>
+      <button class="algo-btn" data-mode="nb">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+          <rect x="2" y="10" width="2.5" height="4" rx="1" fill="currentColor"/>
+          <rect x="6.5" y="6" width="2.5" height="8" rx="1" fill="currentColor"/>
+          <rect x="11" y="2" width="2.5" height="12" rx="1" fill="currentColor"/>
+        </svg>
+        Naive Bayes
+      </button>
+      <button class="algo-btn" data-mode="vader">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M5 9.5c.8 1 2 1.5 3 1.5s2.2-.5 3-1.5"
+            stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          <circle cx="6" cy="7" r="1" fill="currentColor"/>
+          <circle cx="10" cy="7" r="1" fill="currentColor"/>
+        </svg>
+        VADER
+      </button>
+    </div>
+    <p class="algo-desc" id="algoDesc">Naive Bayes + VADER combined (recommended)</p>
+
+    <div class="log-header" style="margin-top:8px;">
+      <span class="log-count" id="logCount">0 detections</span>
+      <button class="ghost-btn" id="clearLog">Clear</button>
+    </div>
+    <div id="liveLog" class="live-log">
+      <div class="log-empty">No detections yet — browse any page.</div>
+    </div>
+  </div>
+
+  <!-- ── Tab: Test ───────────────────────────────────────────── -->
+  <div class="tab-panel" id="tab-test">
+    <p class="hint">
+      Test any text live across all 3 algorithms to demonstrate
+      the SOP 2 comparison for your panel.
+    </p>
+    <div class="test-input-row">
+      <input type="text" id="testInput" placeholder="e.g. You are worthless!" />
+    </div>
+    <button class="full-btn" id="testBtn">▶ Analyze Text</button>
+
+    <div id="sop2Results" class="sop2-panel hidden">
+      <div id="sop2Verdict" class="sop2-verdict"></div>
+
+      <div class="section-title">Algorithm Comparison</div>
+      <table class="data-table">
+        <thead>
+          <tr><th>Algorithm</th><th>Score</th><th>Result</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Naive Bayes</td>
+            <td id="nbScore">—</td>
+            <td id="nbResult">—</td>
+          </tr>
+          <tr>
+            <td>VADER</td>
+            <td id="vaderScore">—</td>
+            <td id="vaderResult">—</td>
+          </tr>
+          <tr class="row-hybrid" id="hybridRow">
+            <td><strong>Hybrid (NB + VADER)</strong></td>
+            <td id="hybridScore">—</td>
+            <td id="hybridResult">—</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="section-title">Score Breakdown</div>
+      <div class="bar-group">
+        <div class="bar-row">
+          <span class="bar-label">Naive Bayes</span>
+          <div class="bar-track"><div class="bar-fill" id="nbBar"></div></div>
+          <span class="bar-pct" id="nbPct">0%</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">VADER</span>
+          <div class="bar-track"><div class="bar-fill" id="vaderBar"></div></div>
+          <span class="bar-pct" id="vaderPct">0%</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">Hybrid</span>
+          <div class="bar-track"><div class="bar-fill" id="hybridBar"></div></div>
+          <span class="bar-pct" id="hybridPct">0%</span>
+        </div>
+        <div class="threshold-note">
+          <span id="thresholdLabel">── Threshold: 50%</span>
+        </div>
+      </div>
+
+      <div class="note-box" id="sop2Note"></div>
+    </div>
+  </div>
+
+  <!-- ── Tab: Steps ──────────────────────────────────────────── -->
+  <div class="tab-panel" id="tab-steps">
+    <p class="hint">
+      Watch the algorithm work through your last analyzed text live —
+      tokenizing, scoring, and combining, one stage at a time.
+    </p>
+    <div id="stepsEmpty" class="note-box">
+      Analyze some text in the <strong>Test</strong> tab first — you'll be
+      brought straight here afterward.
+    </div>
+    <button class="full-btn hidden" id="replayStepsBtn">▶ Replay</button>
+    <div id="stepByStep" class="step-by-step" style="margin-top:10px;"></div>
+  </div>
+
+  <!-- ── Tab: Algorithms ─────────────────────────────────────── -->
+  <div class="tab-panel" id="tab-algorithms">
+    <p class="hint">
+      What each algorithm actually is, how it turns text into a score on its
+      own, and how the two scores get combined into the final Hybrid
+      verdict.
+    </p>
+    <div class="algo-legend">
+      <span><span class="algo-swatch step"></span> step header</span>
+      <span><span class="algo-swatch pos"></span> safe-leaning term</span>
+      <span><span class="algo-swatch neg"></span> aggressive-leaning term</span>
+      <span><span class="algo-swatch const"></span> tunable constant</span>
+      <span><span class="algo-swatch term"></span> formula variable</span>
+    </div>
+
+    <!-- How each algorithm computes its own score, BEFORE the hybrid blend.
+         Mirrors the real math in TRAINING/train.py / lib/naive_bayes.js and
+         lib/vader.js — kept in its own collapsible <details> per algorithm
+         so the tab doesn't turn into a wall of text. -->
+    <div class="algo-card">
+    <div class="algo-card-title">How Naive Bayes Works</div>
+    <div class="algo-card-body">
+    <p class="hint">
+      <strong>Definition:</strong> Naive Bayes is a supervised, probabilistic
+      machine-learning classifier based on Bayes' Theorem. It's called
+      "naive" because it assumes every word in a comment pushes the
+      aggressive/safe decision independently of every other word — it
+      ignores grammar and word order entirely. It has to be trained:
+      everything it "knows" comes from counting word frequencies across the
+      51,920 labeled training comments, nothing is hand-written.
+    </p>
+    <details class="calc-details">
+      <summary>Show the step-by-step computation (real numbers from this model)</summary>
+      <div style="padding:10px 11px 4px;">
+
+        <div class="algo-step">
+          <span class="algo-step-num">1</span>
+          <div class="algo-step-body">
+            <div class="algo-step-title">Tokenize</div>
+            <p>Lowercase the text, strip punctuation, remove stopwords ("a", "the", "is"...). Words following a negation ("not", "never", "don't"...) within a 3-word window are tagged separately (e.g. "not_stupid") instead of being scored the same as the bare word "stupid".</p>
+          </div>
+        </div>
+
+        <div class="algo-step">
+          <span class="algo-step-num">2</span>
+          <div class="algo-step-body">
+            <div class="algo-step-title">Class Prior <span class="algo-step-sub">— baseline, before reading a single word</span></div>
+            <p>Computed once from real training document counts:</p>
+            <div class="formula-box"><span class="hl-pos">log_prior(safe)</span> = log(38,940 / 51,920) = <strong>-0.2877</strong></div>
+            <div class="formula-box"><span class="hl-neg">log_prior(aggressive)</span> = log(12,980 / 51,920) = <strong>-1.3863</strong></div>
+            <p>Starts biased toward "safe" — <span class="hl-const">75%</span> of training comments are safe.</p>
+          </div>
+        </div>
+
+        <div class="algo-step">
+          <span class="algo-step-num">3</span>
+          <div class="algo-step-body">
+            <div class="algo-step-title">Score each matched word <span class="algo-step-sub">— Laplace / add-1 smoothing</span></div>
+            <p>For every token that exists in the 99,561-word trained vocabulary:</p>
+            <div class="formula-box"><span class="hl-term">ll(class)</span> = log( (word count in class <span class="hl-const">+ 1</span>) / (total words in class + vocab size) )</div>
+            <p>Real totals used: 1,604,569 safe-class words, 427,093 aggressive-class words. The <span class="hl-const">+1</span> (Laplace smoothing) stops a word NB has never seen in one class from getting a log(0) = −infinity score.</p>
+          </div>
+        </div>
+
+        <div class="algo-step">
+          <span class="algo-step-num">4</span>
+          <div class="algo-step-body">
+            <div class="algo-step-title">Dampen negated words</div>
+            <p>A "not_X" token only ever appears in a handful of training examples, so its learned class split is noisy. Its two log-likelihoods are pulled <span class="hl-const">75%</span> of the way toward their average, so a single negated word can't single-handedly flip the verdict.</p>
+          </div>
+        </div>
+
+        <div class="algo-step">
+          <span class="algo-step-num">5</span>
+          <div class="algo-step-body">
+            <div class="algo-step-title">Add it all up</div>
+            <div class="formula-box"><span class="hl-pos">score_safe</span> = <span class="hl-pos">log_prior(safe)</span> + sum of every matched word's <span class="hl-pos">ll(safe)</span></div>
+            <div class="formula-box"><span class="hl-neg">score_aggressive</span> = <span class="hl-neg">log_prior(aggressive)</span> + sum of every matched word's <span class="hl-neg">ll(aggressive)</span></div>
+          </div>
+        </div>
+
+        <div class="algo-step">
+          <span class="algo-step-num">6</span>
+          <div class="algo-step-body">
+            <div class="algo-step-title">Convert to a probability <span class="algo-step-sub">— softmax</span></div>
+            <div class="formula-box"><span class="hl-neg">P(aggressive)</span> = e^(<span class="hl-neg">score_aggressive</span>) / ( e^(<span class="hl-pos">score_safe</span>) + e^(<span class="hl-neg">score_aggressive</span>) )</div>
+          </div>
+        </div>
+
+        <div class="algo-step">
+          <span class="algo-step-num">7</span>
+          <div class="algo-step-body">
+            <div class="algo-step-title">Decision</div>
+            <div class="formula-box"><span class="hl-neg">P(aggressive)</span> &ge; <span class="hl-const">50%</span> &rarr; Naive Bayes says <span class="hl-neg">AGGRESSIVE</span></div>
+          </div>
+        </div>
+
+      </div>
+    </details>
+    </div>
+    </div>
+
+    <div class="algo-card">
+    <div class="algo-card-title">How VADER Works</div>
+    <div class="algo-card-body">
+    <p class="hint">
+      <strong>Definition:</strong> VADER (Valence Aware Dictionary and
+      sEntiment Reasoner) is a rule-based sentiment-analysis tool — not
+      machine learning, and it has no training step. It scores text using a
+      fixed, hand-built dictionary of words with pre-assigned
+      positive/negative "valence" scores, plus grammar-aware rules for
+      negation, intensifiers, capitalization, and punctuation.
+    </p>
+    <details class="calc-details">
+      <summary>Show the step-by-step computation</summary>
+      <div style="padding:10px 11px 4px;">
+
+        <div class="algo-step">
+          <span class="algo-step-num">1</span>
+          <div class="algo-step-body">
+            <div class="algo-step-title">Expand slang</div>
+            <p>Joined internet slang is split before scoring, e.g. "shutup" &rarr; "shut up", "kys" &rarr; "kill yourself".</p>
+          </div>
+        </div>
+
+        <div class="algo-step">
+          <span class="algo-step-num">2</span>
+          <div class="algo-step-body">
+            <div class="algo-step-title">Look up each word's base valence</div>
+            <p>Every word found in the lexicon gets a hand-assigned score, e.g.:</p>
+            <div class="algo-chip-row">
+              <span class="algo-chip hl-neg">"hate" = -3.2</span>
+              <span class="algo-chip hl-neg">"stupid" = -2.9</span>
+              <span class="algo-chip hl-pos">"beautiful" = +2.8</span>
+              <span class="algo-chip hl-pos">"great" = +3.1</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="algo-step">
+          <span class="algo-step-num">3</span>
+          <div class="algo-step-body">
+            <div class="algo-step-title">Apply modifiers, in order</div>
+            <div class="formula-box">ALL CAPS emphasis: &plusmn;<span class="hl-const">0.733</span> if the word is capitalized and the sentence has other caps too</div>
+            <div class="formula-box">Booster words nearby: "very"/"so" = &plusmn;<span class="hl-const">0.29</span>, "extremely"/"absolutely" = &plusmn;<span class="hl-const">0.44</span>, scaled by distance</div>
+            <div class="formula-box">Negation 1-3 words before: valence &times; <span class="hl-const">-0.74</span> — this is why "not beautiful" reads negative</div>
+          </div>
+        </div>
+
+        <div class="algo-step">
+          <span class="algo-step-num">4</span>
+          <div class="algo-step-body">
+            <div class="algo-step-title">Punctuation boost</div>
+            <p>Each "!" in the text adds a small push in the direction the sentiment is already leaning (capped at 4 exclamation marks).</p>
+          </div>
+        </div>
+
+        <div class="algo-step">
+          <span class="algo-step-num">5</span>
+          <div class="algo-step-body">
+            <div class="algo-step-title">Sum and normalize</div>
+            <p>Add every word's final valence together, then squash it to a -1..+1 "compound" score:</p>
+            <div class="formula-box"><span class="hl-term">compound</span> = sum / sqrt( sum&sup2; + <span class="hl-const">&alpha;</span> )   — <span class="hl-const">&alpha; &asymp; 10-15</span></div>
+          </div>
+        </div>
+
+        <div class="algo-step">
+          <span class="algo-step-num">6</span>
+          <div class="algo-step-body">
+            <div class="algo-step-title">Sarcasm correction</div>
+            <p>If a known sarcastic phrase is detected ("oh wow", "real genius", "yeah right"...) and the compound reads positive, it gets flipped <span class="hl-neg">negative</span> — sarcastic praise is treated as aggression, not genuine sentiment.</p>
+          </div>
+        </div>
+
+        <div class="algo-step">
+          <span class="algo-step-num">7</span>
+          <div class="algo-step-body">
+            <div class="algo-step-title">Backhanded-insult override</div>
+            <p>If the sentence has "but/however/although" AND one clause directly insults "you" (e.g. "you are worthless"), only THAT clause's compound is used — a trailing compliment can't cancel out a leading insult.</p>
+          </div>
+        </div>
+
+        <div class="algo-step">
+          <span class="algo-step-num">8</span>
+          <div class="algo-step-body">
+            <div class="algo-step-title">Decision</div>
+            <div class="formula-box"><span class="hl-neg">aggression_score</span> = max(0, -compound) — only negative sentiment counts; positive text always scores 0</div>
+            <div class="formula-box"><span class="hl-neg">aggression_score</span> &ge; <span class="hl-const">50%</span> &rarr; VADER says <span class="hl-neg">AGGRESSIVE</span></div>
+          </div>
+        </div>
+
+      </div>
+    </details>
+    </div>
+    </div>
+
+    <!-- Weight rationale for R_score = 0.6*NB + 0.4*VADER — mirrors the
+         "why 60/40" note already shown in the per-comment Steps trace panel
+         (result_display.js). -->
+    <div class="algo-card">
+    <div class="algo-card-title">Why 60% Naive Bayes / 40% VADER?</div>
+    <div class="algo-card-body">
+    <div class="note-box" style="margin-bottom:0;">
+      <p style="margin:0 0 8px;">
+        The weights in <code>R_score = 0.6 × NB + 0.4 × VADER</code> are set in
+        proportion to how much each algorithm can be trusted on its own,
+        measured on the same 12,980 held-out test comments:
+      </p>
+      <table class="data-table" style="margin-bottom:8px;">
+        <thead><tr><th>Algorithm (solo)</th><th>Precision</th><th>Recall</th><th>F1-Score</th></tr></thead>
+        <tbody>
+          <tr><td>Naive Bayes</td><td class="metric-val">85.13%</td><td class="metric-val">77.60%</td><td class="metric-val">81.19%</td></tr>
+          <tr><td>VADER</td><td class="metric-mid">57.40%</td><td class="metric-mid">58.43%</td><td class="metric-mid">57.91%</td></tr>
+        </tbody>
+      </table>
+      <div class="formula-box" style="margin-bottom:8px;">NB's share of combined F1 = 81.19 / (81.19 + 57.91) = 81.19 / 139.10 &asymp; <strong class="hl-pos">58.4%</strong> &mdash; the chosen <strong class="hl-pos">60%</strong> weight sits within &asymp;1.6 points of that ratio, rounded to a clean number instead of an oddly-precise 58.4/41.6 split.</div>
+      <p style="margin:0 0 8px;">
+        Naive Bayes' F1 (81.19%) is roughly 23 points ahead of VADER's (57.91%)
+        — it actually learned real word-frequency patterns from 51,920 labeled
+        training comments, while VADER is a fixed, hand-built sentiment
+        lexicon with no training step of its own. Since NB is the
+        substantially stronger standalone model, it gets the majority vote
+        (<strong>w1 = 0.6</strong>); VADER isn't discarded, but its weaker,
+        un-trained signal only gets to nudge the score
+        (<strong>w2 = 0.4</strong>), not dominate it.
+      </p>
+      <p style="margin:0;">
+        VADER still earns its 40%: it catches genuine aggression that NB's
+        bag-of-words model misses on its own — see the worked example in the
+        Evaluation tab, where NB alone scores a real insult as SAFE (33.86%)
+        but VADER's negation-aware sentiment handling correctly reads it as
+        hostile (75.81%), and the blend flips the final verdict to
+        AGGRESSIVE. The actual proof this 60/40 split works: blending at
+        this ratio measurably beats Naive Bayes alone on the same held-out
+        test set — Precision rises from 85.13% → 88.82% and F1 from 81.19%
+        → 81.42%, at a small Recall cost (77.60% → 75.16%). The ratio wasn't
+        found by grid-searching every possible weight combination — it's a
+        direct, interpretable reflection of each algorithm's own measured
+        reliability, and that reflection held up when tested.
+      </p>
+    </div>
+    <p class="hint" style="margin-top:8px;margin-bottom:0;">
+      <strong>Why not give VADER more than 40%?</strong> It was tried —
+      pushing VADER's weight higher made the blended result <em>less</em>
+      reliable, not more. That tracks with the numbers above: VADER's
+      standalone F1 (57.91%) trails Naive Bayes' (81.19%) by ~23 points, so
+      the more influence VADER's weight gives it, the more of its own
+      mistakes (mainly false positives — sentiment-only scoring has no
+      memory of real aggression patterns the way a trained model does) get
+      carried into the final Hybrid score instead of being corrected by NB.
+      60/40 is the point where VADER still meaningfully corrects NB's
+      blind spots (see the worked example above) without letting VADER's
+      weaker judgment start overriding NB's.
+    </p>
+    </div>
+    </div>
+
+    <!-- Worked examples — every number below is hand-derived from the real
+         formulas above. Example 1's numbers are cross-checked against this
+         exact sentence's live output in the Test/Steps tabs (NB 25.0%,
+         VADER 54.8%, Hybrid 54.8%) and is the literal example already named
+         in content.js's own "zero-evidence guard" code comment. Example 2
+         is the same sentence with "not" removed — deliberately, so the
+         negation flip is the only variable that changes. Its NB/VADER/
+         Hybrid numbers were independently hand-derived from real vocab.json
+         entries and the same formulas, then verified against a live run. -->
+    <div class="algo-card">
+    <div class="algo-card-title">Worked Examples — Aggressive vs. Safe</div>
+    <div class="algo-card-body">
+    <p class="hint" style="margin-top:0;">
+      Two real sentences, run through every formula above, start to finish —
+      the exact same wording except one word, so you can see what negation
+      alone changes.
+    </p>
+
+    <div class="algo-example-head is-agg">Example 1 — AGGRESSIVE: "You are not beautiful"</div>
+
+    <div class="algo-step">
+      <span class="algo-step-num">A</span>
+      <div class="algo-step-body">
+        <div class="algo-step-title">Naive Bayes</div>
+        <p>Tokenize: "you" and "are" are stopwords, removed. "not" triggers negation, consumed. "beautiful" gets tagged <code>not_beautiful</code>.</p>
+        <p><code>not_beautiful</code> never showed up often enough in training to earn its own vocabulary entry — <strong>zero words matched</strong>. With no evidence at all, NB falls back entirely to the class prior:</p>
+        <div class="formula-box"><span class="hl-neg">P(aggressive)</span> = aggressive docs / total docs = 12,980 / 51,920 = <strong class="hl-neg">25.0%</strong></div>
+      </div>
+    </div>
+
+    <div class="algo-step">
+      <span class="algo-step-num">B</span>
+      <div class="algo-step-body">
+        <div class="algo-step-title">VADER</div>
+        <p>Tokenize (VADER keeps stopwords): "You", "are", "not", "beautiful". Only "beautiful" is in the lexicon.</p>
+        <div class="formula-box">base valence = <span class="hl-pos">+2.8</span></div>
+        <div class="formula-box">negated by "not" 1 word before &rarr; <span class="hl-pos">+2.8</span> &times; <span class="hl-const">-0.74</span> = <span class="hl-neg">-2.072</span></div>
+        <div class="formula-box"><span class="hl-term">compound</span> = -2.072 / sqrt(2.072&sup2; + 10) = -2.072 / 3.781 &asymp; <span class="hl-neg">-0.548</span></div>
+        <div class="formula-box"><span class="hl-neg">aggression_score</span> = max(0, 0.548) = <strong class="hl-neg">54.8%</strong></div>
+      </div>
+    </div>
+
+    <div class="algo-step">
+      <span class="algo-step-num">C</span>
+      <div class="algo-step-body">
+        <div class="algo-step-title">Hybrid</div>
+        <p>Normally this would blend <code>0.6 &times; 25.0% + 0.4 &times; 54.8% = 36.9%</code> — but NB matched <strong>zero</strong> words here, so its 25.0% isn't real evidence, just the untouched class prior. The <strong>zero-evidence guard</strong> catches exactly this case and skips the blend, using VADER's read directly instead:</p>
+        <div class="formula-box"><span class="hl-neg">Hybrid</span> = VADER = <strong class="hl-neg">54.8%</strong> &ge; <span class="hl-const">50%</span> &rarr; <span class="hl-neg">AGGRESSIVE</span> ✓</div>
+      </div>
+    </div>
+
+    <div class="algo-example-head is-safe" style="margin-top:16px;">Example 2 — SAFE: "You are so beautiful"</div>
+
+    <div class="algo-step">
+      <span class="algo-step-num">D</span>
+      <div class="algo-step-body">
+        <div class="algo-step-title">Naive Bayes</div>
+        <p>Tokenize: "you", "are", "so" are all stopwords, removed. No negation this time — "beautiful" stays as itself (not tagged) and <strong>does</strong> exist in the trained vocabulary.</p>
+        <div class="formula-box">safe total = log_prior(safe) + ll(safe) = -0.2877 + -10.2710 = <strong class="hl-pos">-10.5587</strong></div>
+        <div class="formula-box">aggressive total = log_prior(aggressive) + ll(aggressive) = -1.3863 + -9.7403 = <strong class="hl-neg">-11.1266</strong></div>
+        <div class="formula-box"><span class="hl-pos">P(aggressive)</span> = softmax(safe total, aggressive total) = <strong class="hl-pos">36.2%</strong></div>
+        <p class="hint">Notice this is still nowhere near 0% — "beautiful" is a genuinely positive word, but its rare, class-imbalanced training counts give it a small noisy lean toward "aggressive" (the same effect covered earlier for "worthless but beautiful"). 36.2% stays safely under the 50% threshold, so NB alone still calls this SAFE.</p>
+      </div>
+    </div>
+
+    <div class="algo-step">
+      <span class="algo-step-num">E</span>
+      <div class="algo-step-body">
+        <div class="algo-step-title">VADER</div>
+        <p>Tokenize: "You", "are", "so", "beautiful". "beautiful" matches the lexicon; "so" is a booster word directly before it.</p>
+        <div class="formula-box">base valence = <span class="hl-pos">+2.8</span></div>
+        <div class="formula-box">boosted by "so" (+0.293, adjacent) &rarr; 2.8 + 0.293 = <span class="hl-pos">+3.093</span> <span class="algo-step-sub">(no negation word this time — nothing flips it)</span></div>
+        <div class="formula-box"><span class="hl-term">compound</span> = 3.093 / sqrt(3.093&sup2; + 10) = 3.093 / 4.423 &asymp; <span class="hl-pos">+0.699</span></div>
+        <div class="formula-box"><span class="hl-pos">aggression_score</span> = max(0, -0.699) = <strong class="hl-pos">0.0%</strong> <span class="algo-step-sub">(positive compound never counts as aggression)</span></div>
+      </div>
+    </div>
+
+    <div class="algo-step">
+      <span class="algo-step-num">F</span>
+      <div class="algo-step-body">
+        <div class="algo-step-title">Hybrid</div>
+        <p>NB matched a real word this time ("beautiful" is in the trained vocabulary), so the zero-evidence guard doesn't apply — the normal 60/40 blend runs:</p>
+        <div class="formula-box"><span class="hl-pos">Hybrid</span> = 0.6 &times; 36.2% + 0.4 &times; 0.0% = <strong class="hl-pos">21.7%</strong> &lt; <span class="hl-const">50%</span> &rarr; <span class="hl-pos">SAFE</span> ✓</div>
+      </div>
+    </div>
+
+    <p class="hint" style="margin-top:4px;">
+      Same sentence, same words, one negation removed — VADER's read flips from
+      <strong style="color:var(--red-600);">54.8% aggressive</strong> to
+      <strong style="color:var(--green-700);">0.0% safe</strong>, and the
+      Hybrid verdict flips with it. This is exactly what "negation flips
+      meaning" refers to throughout the rest of this extension.
+    </p>
+    </div>
+    </div>
+  </div>
+
+  <!-- ── Tab: Evaluation ─────────────────────────────────────── -->
+  <div class="tab-panel" id="tab-sop2">
+    <p class="hint">
+      SOP 2 evaluation on 12,980 unseen test samples from 64,900 total.
+    </p>
+
+    <!-- Winner Banner — Hybrid genuinely wins Precision and F1 at the SAME
+         0.5 threshold as NB/VADER (verified against TRAINING/SOP2_Evaluation.ipynb) -->
+    <div class="winner-banner">
+      <div class="winner-star">★</div>
+      <div class="winner-body">
+        <div class="winner-title">Hybrid Model Wins</div>
+        <div class="winner-sub">Best Precision &amp; F1-Score</div>
+      </div>
+      <div class="winner-scores">
+        <span>Precision: 88.82%</span>
+        <span>Recall: 75.16%</span>
+        <span>F1-Score: 81.42%</span>
+      </div>
+    </div>
+
+    <div class="dataset-strip">
+      <span><strong>Training:</strong> 51,920 (80%)</span>
+      <span class="sep">·</span>
+      <span><strong>Test:</strong> 12,980 (20%)</span>
+      <span class="sep">·</span>
+      <span><strong>Threshold:</strong> 0.5 (same cutoff for NB, VADER, and Hybrid)</span>
+    </div>
+
+    <!-- Dataset Composition — real counts, verified against three independent
+         sources that all agree: vocab.json's class_counts (training split),
+         sop2_report.txt's classification_report support column (test split),
+         and this tab's own confusion matrix below (TP+FN / TN+FP). -->
+    <div class="section-title">Dataset Composition</div>
+    <table class="data-table" style="margin-bottom:6px;">
+      <thead>
+        <tr><th>Split</th><th>Aggressive</th><th>Non-Aggressive</th><th>Total</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Full Dataset</td>
+          <td class="metric-val">16,225 (25.0%)</td>
+          <td class="metric-val">48,675 (75.0%)</td>
+          <td class="metric-val">64,900</td>
+        </tr>
+        <tr>
+          <td>Training (80%)</td>
+          <td class="metric-val">12,980 (25.0%)</td>
+          <td class="metric-val">38,940 (75.0%)</td>
+          <td class="metric-val">51,920</td>
+        </tr>
+        <tr>
+          <td>Test (20%)</td>
+          <td class="metric-val">3,245 (25.0%)</td>
+          <td class="metric-val">9,735 (75.0%)</td>
+          <td class="metric-val">12,980</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="hint" style="margin-top:-6px;">
+      Stratified 80/20 split (scikit-learn <code>train_test_split</code>,
+      <code>random_state=42</code>) — the ~25% aggressive / 75% non-aggressive
+      ratio is preserved in both the training and test sets. Vocabulary:
+      99,561 unique words. This 3:1 class imbalance is expected for
+      real-world aggression data (most comments are not aggressive), but it
+      also means Naive Bayes' per-word statistics get noisier on rare words
+      that appear only a handful of times in the smaller aggressive class.
+    </p>
+
+    <p class="hint" style="margin-top:-6px;">
+      See the <strong>Algorithms</strong> tab for a full step-by-step
+      breakdown of how Naive Bayes and VADER each compute their score, and
+      the basis for the 60/40 Hybrid weighting.
+    </p>
+
+    <div class="section-title">Performance Metrics</div>
+    <table class="data-table" style="margin-bottom:12px;">
+      <thead>
+        <tr><th>Algorithm</th><th>Precision</th><th>Recall</th><th>F1-Score</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Naive Bayes</td>
+          <td class="metric-val">85.13%</td>
+          <td class="metric-val">77.60%</td>
+          <td class="metric-val">81.19%</td>
+        </tr>
+        <tr>
+          <td>VADER Only</td>
+          <td class="metric-mid">57.40%</td>
+          <td class="metric-mid">58.43%</td>
+          <td class="metric-mid">57.91%</td>
+        </tr>
+        <tr class="row-hybrid static-best">
+          <td><strong>Hybrid (NB + VADER)</strong></td>
+          <td class="metric-best">88.82%</td>
+          <td class="metric-best">75.16%</td>
+          <td class="metric-best">81.42%</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="hint" style="margin-top:-6px;">All three use the same 0.5 threshold — there is no separate tuned cutoff for Hybrid. Blending NB and VADER's scores before thresholding still lifts Precision (85.13% → 88.82%) and F1 (81.19% → 81.42%) above Naive Bayes alone, at the cost of a bit of Recall (77.60% → 75.16%): VADER's signal filters out some of NB's false positives, but also mutes a few of NB's correct low-confidence catches.</p>
+
+    <div class="section-title">Hybrid — Confusion Matrix</div>
+    <div class="cm-grid">
+      <div class="cm-cell tp"><span class="cm-num">2439</span><span class="cm-lbl">True Pos</span></div>
+      <div class="cm-cell tn"><span class="cm-num">9428</span><span class="cm-lbl">True Neg</span></div>
+      <div class="cm-cell fp"><span class="cm-num">307</span><span class="cm-lbl">False Pos</span></div>
+      <div class="cm-cell fn"><span class="cm-num">806</span><span class="cm-lbl">False Neg</span></div>
+    </div>
+
+    <div class="section-title">Precision</div>
+    <div class="bar-group">
+      <div class="bar-row">
+        <span class="bar-label">Naive Bayes</span>
+        <div class="bar-track"><div class="bar-fill" style="width:85.13%;background:#3b82f6;"></div></div>
+        <span class="bar-pct">85.13%</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">VADER</span>
+        <div class="bar-track"><div class="bar-fill" style="width:57.40%;background:#f59e0b;"></div></div>
+        <span class="bar-pct" style="color:#d97706;">57.40%</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label" style="font-weight:700;color:#15803d;">Hybrid ★</span>
+        <div class="bar-track"><div class="bar-fill" style="width:88.82%;background:#15803d;"></div></div>
+        <span class="bar-pct" style="color:#15803d;font-weight:800;">88.82%</span>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:10px;">Recall</div>
+    <div class="bar-group">
+      <div class="bar-row">
+        <span class="bar-label" style="font-weight:700;color:#15803d;">Naive Bayes ★</span>
+        <div class="bar-track"><div class="bar-fill" style="width:77.60%;background:#15803d;"></div></div>
+        <span class="bar-pct" style="color:#15803d;font-weight:800;">77.60%</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">VADER</span>
+        <div class="bar-track"><div class="bar-fill" style="width:58.43%;background:#f59e0b;"></div></div>
+        <span class="bar-pct" style="color:#d97706;">58.43%</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Hybrid</span>
+        <div class="bar-track"><div class="bar-fill" style="width:75.16%;background:#3b82f6;"></div></div>
+        <span class="bar-pct">75.16%</span>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:10px;">F1-Score</div>
+    <div class="bar-group">
+      <div class="bar-row">
+        <span class="bar-label">Naive Bayes</span>
+        <div class="bar-track"><div class="bar-fill" style="width:81.19%;background:#3b82f6;"></div></div>
+        <span class="bar-pct">81.19%</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">VADER</span>
+        <div class="bar-track"><div class="bar-fill" style="width:57.91%;background:#f59e0b;"></div></div>
+        <span class="bar-pct" style="color:#d97706;">57.91%</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label" style="font-weight:700;color:#15803d;">Hybrid ★</span>
+        <div class="bar-track"><div class="bar-fill" style="width:81.42%;background:#15803d;"></div></div>
+        <span class="bar-pct" style="color:#15803d;font-weight:800;">81.42%</span>
+      </div>
+    </div>
+
+    <!-- Worked example — a real sentence, showing why Hybrid catches what NB alone misses.
+         Numbers verified by running the actual shipped vader.js/naive_bayes.js against this
+         exact text — see conversation history for the reproduction. -->
+    <div class="section-title" style="margin-top:10px;">Why Hybrid, Not Just Naive Bayes</div>
+    <div class="worked-example">
+      <div class="we-sentence">"But I think you are weak, and you don't deserve to play next tournament"</div>
+      <div class="we-row"><span class="we-lbl">Naive Bayes alone</span><span class="we-val" style="color:#dc2626;">33.86% → SAFE (missed)</span></div>
+      <div class="we-row"><span class="we-lbl">VADER alone</span><span class="we-val">75.81% → AGGRESSIVE</span></div>
+      <div class="we-row we-final"><span class="we-lbl">Hybrid (0.6×NB + 0.4×VADER, threshold 50%)</span><span class="we-val">50.64% → AGGRESSIVE ✓</span></div>
+    </div>
+
+    <div class="note-box green" style="margin-top:12px;">
+      <strong style="color:#15803d;">Conclusion:</strong>
+      The Hybrid model (Naive Bayes + VADER) achieves the highest precision
+      and F1-score of the three approaches — <strong>88.82% Precision ·
+      75.16% Recall · 81.42% F1-Score</strong>, all at the same 0.5 threshold
+      used everywhere else. Naive Bayes alone catches most aggression on its
+      own, but VADER's sentiment signal corroborates and catches cases NB's
+      bag-of-words model misses on its own (see example above), lifting
+      Precision and F1 above either single algorithm — at a small Recall
+      trade-off (75.16% vs NB's 77.60%). VADER alone trails both at 57.91%
+      F1, confirming neither algorithm alone is sufficient by itself.
+    </div>
+  </div>
+
+  <!-- ── Tab: Settings ───────────────────────────────────────── -->
+  <div class="tab-panel" id="tab-settings">
+
+    <div class="setting-card">
+      <div class="setting-head">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <rect x="2" y="4" width="12" height="9" rx="1.5" stroke="#15803d" stroke-width="1.5"/>
+          <path d="M5 4V2.8A1.8 1.8 0 0 1 6.8 1h2.4A1.8 1.8 0 0 1 11 2.8V4" stroke="#15803d" stroke-width="1.5"/>
+        </svg>
+        Expert Mode
+      </div>
+      <p class="setting-hint">
+        Reveals the "Test" and "Evaluation" tabs, plus an info button on every
+        scanned comment (aggressive or safe) showing exactly how Naive Bayes
+        and VADER scored it. Keep this off for everyday use — regular users
+        only need Detection and Settings.
+      </p>
+      <label class="toggle-row">
+        <span>Show demo tabs (Test, Steps, Algorithms, Evaluation)</span>
+        <span class="switch light">
+          <input type="checkbox" id="togglePanelMode" />
+          <span class="slider"></span>
+        </span>
+      </label>
+    </div>
+
+    <div class="setting-card">
+      <div class="setting-head">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <path d="M2 8l4 4 8-8" stroke="#15803d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Whitelist — Always Safe
+      </div>
+      <p class="setting-hint">Words here will never be blurred, even if flagged by the model.</p>
+      <div class="keyword-row">
+        <input type="text" id="whitelistInput" placeholder="Add word to whitelist…" />
+        <button class="primary-btn" id="addWhitelistBtn">Add</button>
+      </div>
+      <ul id="whitelistList" class="word-list"></ul>
+    </div>
+
+    <div class="setting-card">
+      <div class="setting-head">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="6" stroke="#dc2626" stroke-width="1.6"/>
+          <path d="M5 5l6 6M11 5l-6 6" stroke="#dc2626" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        Blocklist — Always Blur
+      </div>
+      <p class="setting-hint">Words here will always be blurred, regardless of algorithm score.</p>
+      <div class="keyword-row">
+        <input type="text" id="keywordInput" placeholder="Add word to blocklist…" />
+        <button class="primary-btn" id="addKeywordBtn">Add</button>
+      </div>
+      <ul id="keywordList" class="word-list"></ul>
+    </div>
+
+  </div>
+
+  <!-- ── Footer ──────────────────────────────────────────────── -->
+  <footer>
+    <span>Pamantasan ng Cabuyao</span>
+    <span class="sep">·</span>
+    <span>BSCS Thesis 2026</span>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

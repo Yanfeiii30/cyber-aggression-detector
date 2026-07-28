@@ -1,0 +1,734 @@
+:root {
+  /* ── Type scale — consolidated from ~13 ad-hoc sizes to 7 steps ──────── */
+  --fs-2xs: 9px;    /* badges, tab labels, tiny meta */
+  --fs-xs:  10px;   /* hints, section titles, secondary meta */
+  --fs-sm:  11px;   /* small body text, table cells */
+  --fs-base:12px;   /* default body text */
+  --fs-md:  13px;   /* emphasis, card headers, inputs */
+  --fs-lg:  16px;   /* page title */
+  --fs-xl:  28px;   /* stat numbers */
+
+  /* ── Spacing scale ────────────────────────────────────────────────────── */
+  --sp-1: 4px;  --sp-2: 6px;  --sp-3: 8px;  --sp-4: 10px;
+  --sp-5: 12px; --sp-6: 14px; --sp-7: 16px;
+
+  /* ── Radii ────────────────────────────────────────────────────────────── */
+  --r-sm: 6px; --r-md: 9px; --r-lg: 12px; --r-pill: 20px;
+
+  /* ── Elevation — 3 tiers instead of ad-hoc shadow values ─────────────── */
+  --shadow-sm: 0 1px 3px rgba(15,23,42,0.06);
+  --shadow-md: 0 2px 8px rgba(15,23,42,0.09);
+  --shadow-lg: 0 6px 20px rgba(15,23,42,0.14);
+
+  /* ── Color — status pair always paired with text/shape, never alone ──── */
+  --ink-900: #0f172a; --ink-700: #374151; --ink-500: #64748b; --ink-400: #94a3b8;
+  --line: #e2e8f0; --line-soft: #f1f5f9; --surface: #fff; --surface-sunk: #f8fafc;
+
+  --green-900: #14532d; --green-700: #15803d; --green-600: #16a34a;
+  --green-200: #86efac; --green-100: #bbf7d0; --green-50: #f0fdf4;
+
+  --red-700: #b91c1c; --red-600: #dc2626; --red-200: #fca5a5;
+  --red-100: #fecaca; --red-50: #fef2f2;
+
+  --amber-600: #d97706; --amber-100: #fef3c7; --amber-800: #b45309;
+  --blue-500: #3b82f6;
+
+  --ease: cubic-bezier(.4,0,.2,1);
+  --t-fast: .15s var(--ease);
+  --t-med:  .2s var(--ease);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  width: 420px;
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: var(--fs-base);
+  background: var(--line-soft);
+  color: var(--ink-900);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+header {
+  display: flex; align-items: center; gap: var(--sp-4);
+  padding: 13px var(--sp-7);
+  background: linear-gradient(135deg, #0d5c2b 0%, #16a34a 100%);
+  color: #fff;
+  box-shadow: 0 2px 16px rgba(13,92,43,0.35);
+  position: relative;
+}
+.header-logo {
+  width: 38px; height: 38px; flex-shrink: 0;
+  border-radius: 11px;
+  background: rgba(255,255,255,0.14);
+  border: 1.5px solid rgba(255,255,255,0.22);
+  display: flex; align-items: center; justify-content: center;
+}
+.header-info { flex: 1; min-width: 0; }
+.header-info h1 { font-size: var(--fs-lg); font-weight: 800; letter-spacing: -0.4px; line-height: 1.2; }
+.header-info p  { font-size: var(--fs-xs); opacity: 0.65; margin-top: 1px; }
+.header-right   { display: flex; align-items: center; gap: var(--sp-3); flex-shrink: 0; }
+.platform-chip  {
+  font-size: var(--fs-2xs); font-weight: 700; letter-spacing: 0.3px;
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
+  color: #fff; padding: 2.5px 10px; border-radius: var(--r-pill);
+  max-width: 88px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ── Toggle ─────────────────────────────────────────────────── */
+.switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; cursor: pointer; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute; inset: 0;
+  background: rgba(255,255,255,0.18); border-radius: 22px;
+  border: 1.5px solid rgba(255,255,255,0.32); transition: background var(--t-med), border-color var(--t-med);
+}
+.slider::before {
+  content: ""; position: absolute;
+  width: 14px; height: 14px; left: 3px; top: 50%;
+  transform: translateY(-50%);
+  background: #fff; border-radius: 50%;
+  transition: transform var(--t-med); box-shadow: 0 1px 4px rgba(0,0,0,0.22);
+}
+input:checked + .slider { background: rgba(255,255,255,0.28); border-color: rgba(255,255,255,0.55); }
+input:checked + .slider::before { transform: translateY(-50%) translateX(18px); }
+
+/* ── Status Strip ───────────────────────────────────────────── */
+.status-strip {
+  display: flex; align-items: center; gap: var(--sp-2);
+  padding: 5px var(--sp-7); font-size: var(--fs-sm); font-weight: 600;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.status-on  { background: var(--green-50); color: var(--green-700); }
+.status-off { background: var(--red-50); color: var(--red-700); }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.status-on  .status-dot { background: var(--green-600); box-shadow: 0 0 0 2.5px rgba(22,163,74,0.22); }
+.status-off .status-dot { background: var(--red-600); }
+
+/* ── Stats ──────────────────────────────────────────────────── */
+.stats-row {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: var(--sp-3); padding: var(--sp-5) var(--sp-6) var(--sp-4);
+  background: var(--surface); border-bottom: 1px solid var(--line);
+}
+.stat-card {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 11px var(--sp-3) 10px; border-radius: var(--r-lg);
+  border: 1.5px solid var(--line); background: #fafafa;
+  transition: transform var(--t-fast), box-shadow var(--t-fast);
+}
+.stat-card:hover { transform: translateY(-1.5px); box-shadow: var(--shadow-md); }
+.stat-card.blocked { border-color: var(--red-200); background: var(--red-50); }
+.stat-card.safe    { border-color: var(--green-200); background: var(--green-50); }
+.stat-num {
+  font-size: var(--fs-xl); font-weight: 900;
+  letter-spacing: -1.5px; color: var(--ink-900); line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.stat-card.blocked .stat-num { color: var(--red-600); }
+.stat-card.safe    .stat-num { color: var(--green-600); }
+.stat-lbl {
+  font-size: var(--fs-2xs); font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--ink-400); margin-top: 4px;
+}
+
+/* ── Tab Bar ────────────────────────────────────────────────── */
+.tab-bar {
+  display: flex; align-items: center;
+  padding: 0 var(--sp-6); background: var(--surface);
+  border-bottom: 1.5px solid var(--line);
+}
+.tab {
+  flex: 1; padding: 9px 4px 8px;
+  font-size: var(--fs-2xs); font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px;
+  border: none; background: none; cursor: pointer; color: var(--ink-400);
+  border-bottom: 2.5px solid transparent; margin-bottom: -1.5px;
+  transition: color var(--t-med), border-color var(--t-med); white-space: nowrap;
+}
+.tab.active          { color: var(--green-700); border-bottom-color: var(--green-700); }
+.tab:hover:not(.active) { color: var(--ink-700); }
+
+/* ── Tab Panels ─────────────────────────────────────────────── */
+.tab-panel          { display: none; padding: var(--sp-5) var(--sp-6); }
+.tab-panel.active   { display: block; animation: fade-in .18s var(--ease); }
+@keyframes fade-in { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
+
+/* ── Algorithm Selector ─────────────────────────────────────── */
+.algo-row { display: flex; gap: 5px; margin-bottom: var(--sp-2); }
+.algo-btn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 7px 4px; font-size: var(--fs-sm); font-weight: 700;
+  border: 1.5px solid var(--line); border-radius: var(--r-sm);
+  background: var(--surface); color: var(--ink-500); cursor: pointer;
+  transition: all var(--t-fast); box-shadow: var(--shadow-sm);
+}
+.algo-btn.active { background: var(--green-700); color: #fff; border-color: var(--green-700); box-shadow: var(--shadow-md); }
+.algo-btn:hover:not(.active) { border-color: var(--green-700); color: var(--green-700); background: var(--green-50); }
+.algo-desc {
+  font-size: var(--fs-sm); color: var(--ink-400);
+  text-align: center; padding: 2px 0 var(--sp-3); font-style: italic;
+}
+
+/* ── Detection Log ──────────────────────────────────────────── */
+.log-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--sp-3); }
+.log-count  { font-size: var(--fs-base); font-weight: 700; color: var(--ink-700); }
+.ghost-btn  {
+  font-size: var(--fs-sm); padding: 3px 10px;
+  border: 1.5px solid var(--line); border-radius: var(--r-sm);
+  background: var(--surface); cursor: pointer; color: var(--ink-500); transition: all var(--t-med);
+}
+.ghost-btn:hover { border-color: var(--red-600); color: var(--red-600); background: var(--red-50); }
+.live-log { max-height: 210px; overflow-y: auto; }
+.live-log::-webkit-scrollbar { width: 3px; }
+.live-log::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+.log-empty { font-size: var(--fs-base); color: var(--ink-400); text-align: center; padding: 30px 0; font-style: italic; }
+.log-item {
+  padding: 7px 10px 7px 12px; border-radius: var(--r-md); margin-bottom: 5px;
+  border: 1px solid transparent; border-left-width: 3px;
+  transition: transform var(--t-fast);
+}
+.log-item:hover { transform: translateX(1px); }
+.log-agg  { background: var(--red-50); border-color: var(--red-100); border-left-color: var(--red-600); }
+.log-safe { background: var(--green-50); border-color: var(--green-100); border-left-color: var(--green-600); }
+.log-top  { display: flex; gap: 5px; align-items: center; margin-bottom: 2px; }
+.log-badge { font-size: var(--fs-2xs); font-weight: 800; padding: 1.5px 6px; border-radius: 4px; letter-spacing: 0.5px; }
+.log-agg  .log-badge { background: var(--red-600); color: #fff; }
+.log-safe .log-badge { background: var(--green-600); color: #fff; }
+.log-score { font-size: var(--fs-sm); font-weight: 700; color: var(--ink-700); }
+.log-mode  { font-size: var(--fs-2xs); color: var(--ink-400); background: var(--line-soft); padding: 1.5px 5px; border-radius: 4px; font-weight: 600; }
+.log-time  { font-size: var(--fs-2xs); color: var(--ink-400); margin-left: auto; }
+.log-text  { font-size: var(--fs-sm); color: #4b5563; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Test Tab ───────────────────────────────────────────────── */
+.hint { font-size: var(--fs-sm); color: var(--ink-500); margin-bottom: var(--sp-4); line-height: 1.6; }
+.test-input-row { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.test-input-row input {
+  flex: 1; padding: 8px 11px;
+  border: 1.5px solid var(--line); border-radius: var(--r-md);
+  font-size: var(--fs-md); outline: none; background: var(--surface); transition: all var(--t-med);
+}
+.test-input-row input:focus { border-color: var(--green-700); box-shadow: 0 0 0 3px rgba(21,128,61,0.1); }
+.full-btn {
+  width: 100%; padding: 10px;
+  background: var(--green-700); color: #fff;
+  border: none; border-radius: var(--r-md);
+  font-size: var(--fs-md); font-weight: 700;
+  cursor: pointer; transition: all var(--t-med);
+  display: flex; align-items: center; justify-content: center; gap: var(--sp-2);
+}
+.full-btn:hover    { background: var(--green-900); box-shadow: var(--shadow-lg); }
+.full-btn:disabled { background: var(--ink-400); cursor: not-allowed; box-shadow: none; }
+
+/* ── Loading spinner (Analyze Text button) ───────────────────────────── */
+.btn-spinner {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.35); border-top-color: #fff;
+  animation: spin .7s linear infinite; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Skeleton shimmer while results are loading ──────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, var(--line-soft) 25%, var(--line) 50%, var(--line-soft) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s ease-in-out infinite;
+  border-radius: var(--r-sm);
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ── Live Test Results ──────────────────────────────────────── */
+.sop2-panel        { margin-top: var(--sp-5); transition: opacity var(--t-med); }
+.sop2-panel.hidden { display: none; }
+.sop2-verdict {
+  text-align: center; padding: 11px; border-radius: var(--r-md);
+  font-size: var(--fs-md); font-weight: 800; margin-bottom: var(--sp-5); letter-spacing: 0.1px;
+}
+.sop2-verdict.agg  { background: var(--red-50); color: var(--red-600); border: 1.5px solid var(--red-200); }
+.sop2-verdict.safe { background: var(--green-50); color: var(--green-700); border: 1.5px solid var(--green-200); }
+
+/* ── Section Title ──────────────────────────────────────────── */
+.section-title {
+  font-size: var(--fs-xs); font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.7px; color: var(--ink-400); margin-bottom: var(--sp-3);
+}
+
+/* ── Data Table ─────────────────────────────────────────────── */
+.data-table {
+  width: 100%; border-collapse: collapse; font-size: var(--fs-base);
+  margin-bottom: var(--sp-5); border-radius: var(--r-md); overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.data-table th {
+  background: var(--green-700); color: #fff; padding: 7px 10px; text-align: left;
+  font-size: var(--fs-xs); font-weight: 700; letter-spacing: 0.3px;
+}
+.data-table td          { padding: 7px 10px; border-bottom: 1px solid var(--line-soft); background: var(--surface); }
+.data-table tr:last-child td { border-bottom: none; }
+/* .row-hybrid alone is just bold emphasis. Color comes from a second class:
+   .static-best (fixed benchmark table — Hybrid always wins, always green)
+   or .verdict-agg/.verdict-safe (live Test tab row — reflects the actual
+   per-request result, set dynamically in popup.js). Coloring the live row
+   green unconditionally would contradict an AGGRESSIVE result. */
+.data-table .row-hybrid td  { font-weight: 700; }
+.data-table .row-hybrid.static-best td,
+.data-table .row-hybrid.verdict-safe td { background: var(--green-50); color: var(--green-700); }
+.data-table .row-hybrid.verdict-agg td  { background: var(--red-50); color: var(--red-600); }
+.result-agg  { color: var(--red-600); font-weight: 700; }
+.result-safe { color: var(--green-600); font-weight: 700; }
+
+/* ── Score Bars ─────────────────────────────────────────────── */
+.bar-group     { margin-bottom: var(--sp-1); }
+.bar-row       { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-2); }
+.bar-label     { font-size: var(--fs-sm); color: var(--ink-500); width: 76px; flex-shrink: 0; }
+.bar-track     { flex: 1; height: 9px; background: var(--line-soft); border-radius: var(--r-sm); overflow: hidden; }
+.bar-fill      { height: 100%; border-radius: var(--r-sm); transition: width .6s var(--ease); background: var(--ink-400); width: 0%; }
+.bar-pct       { font-size: var(--fs-sm); font-weight: 700; width: 40px; text-align: right; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.threshold-note { font-size: var(--fs-xs); color: var(--ink-400); text-align: center; margin-top: var(--sp-1); font-style: italic; }
+
+/* ── Metric Cells ───────────────────────────────────────────── */
+.metric-val  { color: var(--ink-700); font-weight: 700; }
+.metric-mid  { color: var(--amber-600); font-weight: 700; }
+.metric-low  { color: var(--red-600); font-weight: 700; }
+.metric-best { color: var(--green-700); font-weight: 800; }
+
+/* ── Dataset Strip ──────────────────────────────────────────── */
+.dataset-strip {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 4px var(--sp-3);
+  background: var(--green-50); border: 1.5px solid var(--green-200); border-radius: var(--r-sm);
+  padding: 6px 11px; font-size: var(--fs-sm); color: var(--ink-700); margin-bottom: var(--sp-5);
+}
+.dataset-strip strong { color: var(--green-700); }
+
+/* ── Winner Banner ──────────────────────────────────────────── */
+.winner-banner {
+  display: flex; align-items: center; gap: 11px;
+  background: linear-gradient(135deg, var(--green-50), #dcfce7);
+  border: 1.5px solid var(--green-200); border-radius: var(--r-lg);
+  padding: 11px 13px; margin-bottom: var(--sp-5);
+  box-shadow: 0 2px 10px rgba(22,163,74,0.12);
+}
+.winner-star  { font-size: 24px; line-height: 1; flex-shrink: 0; }
+.winner-body  { flex: 1; min-width: 0; }
+.winner-title { font-size: var(--fs-md); font-weight: 800; color: var(--green-700); }
+.winner-sub   { font-size: var(--fs-xs); color: var(--green-600); margin-top: 1px; }
+.winner-scores {
+  display: flex; flex-direction: column; gap: 1px;
+  font-size: var(--fs-xs); font-weight: 700; color: var(--green-700); text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Stat callout — one headline number with supporting context ────────── */
+.stat-callout {
+  display: flex; align-items: center; gap: 13px;
+  background: linear-gradient(135deg, var(--green-50), #dcfce7);
+  border: 1.5px solid var(--green-200); border-radius: var(--r-lg);
+  padding: 12px 14px; margin-bottom: var(--sp-5);
+}
+.stat-callout-num  { font-size: 27px; font-weight: 800; color: var(--green-700); line-height: 1; flex-shrink: 0; }
+.stat-callout-text { font-size: var(--fs-sm); color: var(--ink-700); line-height: 1.45; }
+.stat-callout-text strong { color: var(--green-700); }
+
+/* ── Confusion-matrix mini grid ──────────────────────────────────────── */
+.cm-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+  margin: 0 0 var(--sp-5);
+}
+.cm-cell {
+  text-align: center; padding: 8px 4px; border-radius: var(--r-sm);
+  background: var(--surface-sunk); border: 1px solid var(--line);
+}
+.cm-cell .cm-num { display: block; font-size: var(--fs-lg); font-weight: 800; font-variant-numeric: tabular-nums; }
+.cm-cell .cm-lbl { display: block; font-size: 8px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-500); margin-top: 2px; }
+.cm-cell.tp .cm-num { color: var(--green-700); }
+.cm-cell.tn .cm-num { color: var(--ink-700); }
+.cm-cell.fp .cm-num { color: var(--red-600); }
+.cm-cell.fn .cm-num { color: var(--amber-600); }
+
+/* ── Worked example (Evaluation tab) ────────────────────────────────── */
+.worked-example {
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-md);
+  padding: 11px 13px; margin-bottom: var(--sp-5);
+}
+.worked-example .we-sentence {
+  font-size: var(--fs-sm); font-style: italic; color: var(--ink-700);
+  padding: 7px 9px; background: var(--surface-sunk); border-radius: var(--r-sm);
+  margin-bottom: var(--sp-3);
+}
+.we-row { display: flex; justify-content: space-between; align-items: center; font-size: var(--fs-sm); padding: 3px 0; }
+.we-row .we-lbl { color: var(--ink-500); }
+.we-row .we-val { font-weight: 700; font-variant-numeric: tabular-nums; }
+.we-row.we-final { border-top: 1.5px solid var(--line); margin-top: 4px; padding-top: 7px; font-size: var(--fs-md); }
+.we-row.we-final .we-val { color: var(--green-700); }
+
+/* ── Note Box ───────────────────────────────────────────────── */
+.note-box {
+  font-size: var(--fs-sm); color: var(--ink-500); line-height: 1.6;
+  padding: var(--sp-4) var(--sp-5); margin-top: var(--sp-4);
+  background: var(--surface-sunk); border-radius: var(--r-md); border: 1px solid var(--line);
+}
+.note-box.green { background: var(--green-50); border-color: var(--green-200); }
+
+/* ── Help button (Detection tab, regular-user facing) ──────────────────── */
+.help-row { display: flex; justify-content: flex-end; margin-bottom: var(--sp-2); }
+.help-btn {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 1.5px solid var(--line); background: var(--surface);
+  color: var(--ink-500); font-size: var(--fs-sm); font-weight: 700;
+  cursor: pointer; line-height: 1; transition: all var(--t-med);
+}
+.help-btn:hover { border-color: var(--green-600); color: var(--green-700); background: var(--green-50); }
+.help-intro { margin: 0 0 var(--sp-4) 0; color: var(--ink-700); }
+.help-section { margin-top: var(--sp-4); }
+.help-section:first-of-type { margin-top: 0; }
+.help-section > strong { display: block; font-size: var(--fs-sm); color: var(--ink-900); }
+.help-hint { font-weight: 400; color: var(--ink-400); text-transform: none; letter-spacing: 0; }
+.help-list { margin: var(--sp-2) 0 0 var(--sp-5); }
+.help-list li { margin-bottom: var(--sp-1); }
+.help-footnote {
+  margin: var(--sp-4) 0 0 0; padding-top: var(--sp-3);
+  border-top: 1px solid var(--line); color: var(--ink-500); font-style: italic;
+}
+
+/* ── Step-by-Step Trace (Test tab) ─────────────────────────────── */
+.step-by-step { display: flex; flex-direction: column; gap: var(--sp-4); }
+.step-block {
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-md);
+  overflow: hidden; box-shadow: var(--shadow-sm);
+  animation: step-reveal .45s var(--ease) both;
+}
+@keyframes step-reveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+/* Individual pieces (pipeline stages, sentence words, table rows) pop in
+   one at a time as the JS sequencer inserts them — makes the trace read
+   as a live computation instead of a finished result just appearing. */
+.reveal-pop { animation: pop-in .22s var(--ease) both; }
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(4px) scale(.94); }
+  to   { opacity: 1; transform: none; }
+}
+.step-title {
+  background: var(--green-700); color: #fff; font-size: var(--fs-sm); font-weight: 800;
+  padding: 7px 11px; letter-spacing: 0.2px;
+}
+.step-body { padding: var(--sp-4) var(--sp-5); font-size: var(--fs-sm); color: var(--ink-700); line-height: 1.6; }
+.step-body p { margin: 0 0 var(--sp-2); }
+.step-body p:last-child { margin-bottom: 0; }
+.step-result { font-weight: 700; }
+.step-result.is-agg  { color: var(--red-600); }
+.step-result.is-safe { color: var(--green-700); }
+.math-block {
+  margin: var(--sp-2) 0 0; padding: 8px 10px;
+  background: var(--surface-sunk); border: 1px solid var(--line-soft); border-radius: var(--r-sm);
+  font-family: "SF Mono", Consolas, monospace; font-size: 10.5px; line-height: 1.6;
+  color: var(--ink-500); white-space: pre-wrap; word-break: break-word;
+}
+.calc-details {
+  margin-top: 10px; border: 1px dashed var(--line-soft); border-radius: var(--r-sm);
+  background: var(--surface-sunk);
+}
+.calc-details summary {
+  cursor: pointer; list-style: none; padding: 8px 11px;
+  font-family: "SF Mono", Consolas, monospace; font-size: 11px; font-weight: 700;
+  color: var(--accent, #2c7a68); letter-spacing: 0.02em; user-select: none;
+}
+.calc-details summary::-webkit-details-marker { display: none; }
+.calc-details summary::before { content: "\25b8"; margin-right: 6px; font-size: 9px; }
+.calc-details[open] summary::before { content: "\25be"; }
+.calc-details .math-block { border: none; margin: 0; padding: 2px 11px 10px; background: transparent; }
+/* Highlighted terms in a derivation — used in both the Algorithms tab's
+   static math-blocks AND the Test tab's live per-comment calculation.
+   Kept semantically consistent with the on-page word highlighter and the
+   Test tab's verdict colors: red = pushes/reads aggressive, green =
+   pushes/reads safe, amber = tunable constant/parameter, blue = formula
+   variable name, bold uppercase = a STEP header. Not scoped to
+   .math-block so it also works inline in plain result text. */
+.hl-step  { color: var(--green-700); font-weight: 800; }
+.hl-term  { color: var(--blue-500);  font-weight: 700; }
+.hl-neg   { color: var(--red-600);   font-weight: 700; }
+.hl-pos   { color: var(--green-600); font-weight: 700; }
+.hl-const { color: var(--amber-600); font-weight: 700; }
+
+/* ── Algorithm section cards — Algorithms tab. Each major section (How NB
+   Works, How VADER Works, Why 60/40, Worked Example) gets its own bordered
+   box with a colored header bar, mirroring .step-block/.step-title, so the
+   tab reads as distinct chunks instead of one continuous scroll of text. */
+.algo-card {
+  background: var(--surface); border: 1.5px solid var(--line); border-radius: var(--r-md);
+  overflow: hidden; box-shadow: var(--shadow-sm); margin-bottom: 14px;
+}
+.algo-card:last-child { margin-bottom: 0; }
+.algo-card-title {
+  background: var(--green-700); color: #fff; font-size: var(--fs-sm); font-weight: 800;
+  padding: 8px 12px; letter-spacing: 0.2px;
+}
+.algo-card-body { padding: var(--sp-4) var(--sp-5); }
+.algo-card-body > .hint:first-child { margin-top: 0; }
+.algo-card-body > .calc-details:last-child,
+.algo-card-body > .algo-step:last-child { margin-bottom: 0; }
+
+/* ── Algorithm step cards — replaces a manually-aligned monospace <pre>
+   wall of text (which mangles badly once a formula line is longer than
+   the ~380px popup). Each step is its own numbered card; each formula
+   gets its own boxed line that wraps normally instead of relying on
+   space-padding for column alignment. ────────────────────────────────── */
+.algo-step { display: flex; gap: 9px; margin-bottom: 12px; }
+.algo-step:last-child { margin-bottom: 2px; }
+.algo-step-num {
+  flex: 0 0 auto; width: 18px; height: 18px; margin-top: 1px; border-radius: 50%;
+  background: var(--green-700); color: #fff; font-size: 10px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+.algo-step-body { flex: 1; min-width: 0; }
+.algo-step-title { font-weight: 800; font-size: var(--fs-sm); color: var(--ink-900); }
+.algo-step-sub   { font-weight: 500; color: var(--ink-500); }
+.algo-step-body p { margin: 4px 0; font-size: var(--fs-sm); color: var(--ink-700); line-height: 1.55; }
+.algo-step-body p:first-of-type { margin-top: 3px; }
+.algo-step-body p:last-child { margin-bottom: 0; }
+.formula-box {
+  font-family: "SF Mono", Consolas, monospace; font-size: 10.5px; line-height: 1.55;
+  background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-sm);
+  padding: 6px 9px; margin: 4px 0; white-space: normal; word-break: break-word;
+  color: var(--ink-700);
+}
+.formula-box + .formula-box { margin-top: 4px; }
+.algo-chip-row { display: flex; flex-wrap: wrap; gap: 5px; margin: 4px 0; }
+.algo-chip {
+  font-family: "SF Mono", Consolas, monospace; font-size: 10.5px; font-weight: 700;
+  background: var(--surface); border: 1px solid var(--line-soft); border-radius: var(--r-pill);
+  padding: 3px 8px;
+}
+.algo-chip.hl-neg { border-color: var(--red-200); }
+.algo-chip.hl-pos { border-color: var(--green-200); }
+.algo-example-head {
+  font-weight: 800; font-size: var(--fs-sm); padding: 6px 10px;
+  border-radius: var(--r-sm); margin: 0 0 8px;
+}
+.algo-example-head.is-agg  { background: var(--red-50);   color: var(--red-600); }
+.algo-example-head.is-safe { background: var(--green-50); color: var(--green-700); }
+.algo-legend {
+  display: flex; flex-wrap: wrap; gap: 8px 12px;
+  font-size: var(--fs-2xs); color: var(--ink-500); margin: 2px 0 12px;
+}
+.algo-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.algo-legend .algo-swatch { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+.algo-legend .algo-swatch.step  { background: var(--green-700); }
+.algo-legend .algo-swatch.pos   { background: var(--green-600); }
+.algo-legend .algo-swatch.neg   { background: var(--red-600); }
+.algo-legend .algo-swatch.const { background: var(--amber-600); }
+.algo-legend .algo-swatch.term  { background: var(--blue-500); }
+.trace-table {
+  width: 100%; border-collapse: collapse; font-size: var(--fs-sm);
+  margin: var(--sp-2) 0; border-radius: var(--r-sm); overflow: hidden;
+  border: 1px solid var(--line-soft);
+}
+.trace-table th {
+  background: var(--surface-sunk); color: var(--ink-500); padding: 5px 8px; text-align: left;
+  font-size: var(--fs-2xs); font-weight: 700; letter-spacing: 0.3px; text-transform: uppercase;
+}
+.trace-table td { padding: 5px 8px; border-top: 1px solid var(--line-soft); }
+.push-agg   { color: var(--red-600); font-weight: 700; }
+.push-safe  { color: var(--green-600); font-weight: 700; }
+/* Neutral label for a negated-insult token whose NB push is noise from a
+   near-zero training count (e.g. "not_ugly") — deliberately not red/green,
+   since we don't have confident evidence either direction, just an
+   unreliable one. */
+.push-noisy { color: var(--amber-600); font-weight: 700; }
+.tag-cue {
+  display: inline-block; background: var(--amber-100); color: var(--amber-800);
+  font-size: var(--fs-2xs); font-weight: 700; padding: 1px 5px; border-radius: 5px;
+  margin-left: 4px; vertical-align: middle;
+}
+
+/* ── Pipeline diagram (Test tab visualization) ─────────────────────── */
+.pipeline {
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: 4px; justify-content: center; padding: 4px 0;
+}
+.pipe-node {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background: var(--surface-sunk); border: 1.5px solid var(--line); border-radius: var(--r-md);
+  padding: 6px 8px; min-width: 54px; text-align: center;
+  transition: box-shadow var(--t-fast);
+}
+.pipe-icon  { font-size: 15px; line-height: 1; margin-bottom: 2px; }
+.pipe-label { font-size: var(--fs-2xs); font-weight: 700; color: var(--ink-700); }
+.pipe-sub   { font-size: 8.5px; font-weight: 800; letter-spacing: 0.3px; margin-top: 1px; }
+.pipe-arrow { font-size: var(--fs-md); color: #cbd5e1; font-weight: 700; flex-shrink: 0; }
+.pipe-split { flex-direction: row; gap: var(--sp-2); padding: 6px; }
+.pipe-mini  {
+  font-size: 8.5px; color: var(--ink-500); line-height: 1.3; text-align: center;
+  background: var(--surface); border-radius: var(--r-sm); padding: 3px 6px; border: 1px solid var(--line-soft);
+}
+.pipe-mini strong { font-size: var(--fs-sm); color: var(--ink-900); }
+.pipe-node.pipe-agg  { background: var(--red-50); border-color: var(--red-200); box-shadow: var(--shadow-md); }
+.pipe-node.pipe-agg .pipe-label  { color: var(--red-600); font-size: var(--fs-md); }
+.pipe-node.pipe-agg .pipe-sub    { color: var(--red-600); }
+.pipe-node.pipe-safe { background: var(--green-50); border-color: var(--green-200); box-shadow: var(--shadow-md); }
+.pipe-node.pipe-safe .pipe-label { color: var(--green-700); font-size: var(--fs-md); }
+.pipe-node.pipe-safe .pipe-sub   { color: var(--green-700); }
+
+/* ── Highlighted sentence ───────────────────────────────────────────── */
+.highlighted-sentence {
+  font-size: var(--fs-md); line-height: 2; padding: 9px 11px;
+  background: var(--surface-sunk); border: 1.5px solid var(--line); border-radius: var(--r-md);
+  word-wrap: break-word;
+}
+/* Color + underline STYLE (not just color) so the signal survives for
+   colorblind readers — solid underline = pushes aggressive, dotted = safe. */
+.highlighted-sentence .hl-agg {
+  background: var(--red-100); color: #7f1d1d; border-radius: 4px; padding: 1px 3px;
+  font-weight: 700; border-bottom: 2px solid var(--red-600);
+}
+.highlighted-sentence .hl-neg {
+  background: #f3e8ff; color: #6b21a8; border-radius: 4px; padding: 1px 3px;
+  font-weight: 700; border-bottom: 2px dashed #9333ea;
+}
+.highlighted-sentence .hl-safe {
+  background: var(--green-100); color: var(--green-900); border-radius: 4px; padding: 1px 3px;
+  font-weight: 700; border-bottom: 2px dotted var(--green-700);
+}
+.hl-legend {
+  display: flex; gap: var(--sp-6); margin-top: 7px; font-size: var(--fs-xs); color: var(--ink-500);
+}
+.hl-legend .hl-swatch {
+  display: inline-block; width: 9px; height: 9px; border-radius: 3px;
+  margin-right: 4px; vertical-align: middle;
+}
+.hl-legend .hl-agg  { background: var(--red-100); border-bottom: 2px solid var(--red-600); }
+.hl-legend .hl-safe { background: var(--green-100); border-bottom: 2px dotted var(--green-700); }
+.hl-legend .hl-neg  { background: #f3e8ff; border-bottom: 2px dashed #9333ea; }
+
+/* ── Settings ───────────────────────────────────────────────── */
+.setting-card {
+  background: var(--surface); border: 1.5px solid var(--line);
+  border-radius: var(--r-lg); padding: 13px;
+  margin-bottom: var(--sp-4); box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--t-fast);
+}
+.setting-card:hover { box-shadow: var(--shadow-md); }
+.setting-head {
+  display: flex; align-items: center; gap: var(--sp-2);
+  font-size: var(--fs-md); font-weight: 700; color: var(--ink-900); margin-bottom: 3px;
+}
+.setting-hint { font-size: var(--fs-sm); color: var(--ink-400); margin-bottom: var(--sp-3); line-height: 1.5; }
+
+/* ── Toggle row (light background variant, e.g. Settings cards) ─────── */
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--sp-4); cursor: pointer; font-size: var(--fs-base); color: var(--ink-700); font-weight: 600;
+}
+.switch.light .slider {
+  background: var(--line); border-color: #cbd5e1;
+}
+.switch.light .slider::before { background: #fff; }
+.switch.light input:checked + .slider {
+  background: var(--green-700); border-color: var(--green-700);
+}
+.switch.light input:checked + .slider::before { background: #fff; }
+
+/* ── Demo tabs (Test, Evaluation) — hidden unless Expert Mode is on ───────── */
+.tab.demo-tab.hidden { display: none; }
+.keyword-row  { display: flex; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.keyword-row input {
+  flex: 1; padding: 7px 10px; border: 1.5px solid var(--line);
+  border-radius: var(--r-sm); font-size: var(--fs-base); outline: none;
+  background: var(--surface-sunk); transition: all var(--t-med);
+}
+.keyword-row input:focus { border-color: var(--green-700); background: var(--surface); box-shadow: 0 0 0 3px rgba(21,128,61,0.08); }
+.primary-btn {
+  padding: 7px 14px; background: var(--green-700); color: #fff;
+  border: none; border-radius: var(--r-sm); font-size: var(--fs-base); font-weight: 600;
+  cursor: pointer; white-space: nowrap; transition: all var(--t-med);
+}
+.primary-btn:hover { background: var(--green-900); box-shadow: 0 2px 8px rgba(21,128,61,0.25); }
+
+.word-list { list-style: none; max-height: 100px; overflow-y: auto; }
+.word-list::-webkit-scrollbar { width: 3px; }
+.word-list::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+.word-list li {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 5px 9px; background: var(--surface-sunk);
+  border: 1px solid var(--line-soft); border-radius: var(--r-sm);
+  margin-bottom: 4px; font-size: var(--fs-base); color: var(--ink-700); font-weight: 500;
+}
+.remove-btn {
+  background: none; border: none; color: #cbd5e1; cursor: pointer;
+  font-size: 14px; padding: 0 3px; font-weight: 700; line-height: 1; transition: color var(--t-fast);
+}
+.remove-btn:hover { color: var(--red-600); }
+.empty-list { color: var(--ink-400); font-style: italic; font-size: var(--fs-sm); text-align: center; padding: var(--sp-3) 0; }
+
+/* ── Footer ─────────────────────────────────────────────────── */
+footer {
+  display: flex; align-items: center; justify-content: center; gap: var(--sp-2);
+  padding: var(--sp-3) var(--sp-6); font-size: var(--fs-xs); color: var(--ink-400);
+  border-top: 1px solid var(--line); background: var(--surface); letter-spacing: 0.2px;
+}
+.sep { opacity: 0.3; }
+
+/* ── Theme toggle (header icon button) — cycles Light → Dark → Auto.
+   Styled like .header-logo/.platform-chip: translucent white on the green
+   header gradient, not the light-mode --surface/--line tokens those other
+   buttons use (this one never sits on body content, only the header). ─── */
+.theme-icon-btn {
+  width: 26px; height: 26px; flex-shrink: 0; border-radius: 50%;
+  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
+  color: #fff; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background var(--t-med), border-color var(--t-med);
+}
+.theme-icon-btn:hover { background: rgba(255,255,255,0.28); border-color: rgba(255,255,255,0.4); }
+
+/* ── Generic hidden utility (the two .hidden rules above are scoped to
+   .sop2-panel and .tab.demo-tab specifically) ────────────────────────── */
+.hidden { display: none !important; }
+
+/* ══════════════════════════════════════════════════════════════════════
+   DARK MODE — applied via [data-theme="dark"] on <html>, set by popup.js
+   from the stored Light/Dark/Auto preference (Settings > Appearance).
+   Only the neutral scale (ink/line/surface) and the soft color "washes"
+   (the -50/-100/-200 tints used as backgrounds behind status text) are
+   flipped. The saturated brand tones (green-600/700/900, red-600/700,
+   amber-600/800, blue-500) are deliberately left UNCHANGED across themes:
+   they're used both as plain accent text AND as solid button/header fills
+   with white text on top (.full-btn, .data-table th, .step-title,
+   .algo-card-title, .primary-btn, .algo-btn.active...) — flipping their
+   lightness for dark-mode text contrast would break that white-text-on-
+   fill contrast everywhere else. Keeping them fixed is the pragmatic
+   trade-off: slightly less-than-ideal contrast as text-on-dark-surface in
+   a few spots, versus broken buttons in a dozen. ══════════════════════ */
+:root[data-theme="dark"] {
+  /* True neutral grays (no blue tint) — deliberately not the blue-leaning
+     "slate" scale, which read as too navy against the green brand accent. */
+  --ink-900: #f4f4f5; --ink-700: #d4d4d8; --ink-500: #a1a1aa; --ink-400: #71717a;
+  --line: #3f3f46; --line-soft: #18181b; --surface: #26262a; --surface-sunk: #18181b;
+
+  --green-50: #0f2e1c; --green-100: #14532d; --green-200: #166534;
+  --red-50: #2c1212; --red-100: #450a0a; --red-200: #7f1d1d;
+  --amber-100: #451a03;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.45);
+  --shadow-md: 0 2px 10px rgba(0,0,0,0.55);
+  --shadow-lg: 0 6px 22px rgba(0,0,0,0.65);
+}
+/* Hardcoded (non-variable) colors that need their own dark overrides. */
+:root[data-theme="dark"] .stat-card           { background: var(--surface-sunk); }
+:root[data-theme="dark"] .log-text            { color: var(--ink-500); }
+:root[data-theme="dark"] .pipe-arrow          { color: var(--ink-400); }
+:root[data-theme="dark"] .remove-btn          { color: var(--ink-400); }
+:root[data-theme="dark"] .switch.light .slider { border-color: var(--line); }
+:root[data-theme="dark"] .calc-details summary { color: #34d399; }
+:root[data-theme="dark"] .winner-banner,
+:root[data-theme="dark"] .stat-callout {
+  background: linear-gradient(135deg, var(--green-50), #14321f);
+}
+:root[data-theme="dark"] .highlighted-sentence .hl-agg { color: #fecaca; }
+:root[data-theme="dark"] .highlighted-sentence .hl-neg {
+  background: #3b0764; color: #e9d5ff; border-bottom-color: #c084fc;
+}
+:root[data-theme="dark"] .hl-legend .hl-neg {
+  background: #3b0764; border-bottom-color: #c084fc;
+}

@@ -1,0 +1,315 @@
+/* ── Cyber-Aggression Detector — styles.css ─────────────────────────────── */
+
+/* Blur applied to aggressive content */
+.cad-blurred {
+  filter: blur(10px) !important; /* ← increased from 6px to 10px */
+  transition: filter 0.3s ease;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  display: inline-block;
+  min-width: 40px;
+  background: rgba(231, 76, 60, 0.08); /* ← subtle red tint */
+  border-radius: 3px;
+}
+
+/* Tooltip hint on hover */
+.cad-blurred:hover::after {
+  content: "⚠ Aggressive content — click eye to reveal";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  color: #fff;
+  background: rgba(231, 76, 60, 0.95);
+  padding: 4px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 999999;
+}
+
+/* After user reveals content — outline stays until re-blurred */
+.cad-revealed {
+  filter: none !important;
+  outline: 2px solid #e74c3c;
+  border-radius: 3px;
+}
+
+/* Eye icon reveal button next to blurred block */
+.cad-reveal-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  color: #fff;
+  background: #e74c3c;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  vertical-align: middle;
+  z-index: 999999;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.cad-reveal-btn:hover {
+  background: #c0392b;
+}
+
+/* Instant pre-blur applied before analysis */
+.cad-preblur {
+  filter: blur(10px) !important;
+  transition: filter 0.1s ease;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ── Expert Mode — "why blurred / why safe" info button + trace panel ───── */
+.cad-info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 6px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  color: #fff;
+  background: #34495e;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  vertical-align: middle;
+  z-index: 999999;
+  position: relative;
+  flex-shrink: 0;
+}
+.cad-info-btn:hover,
+.cad-info-btn.cad-info-active {
+  background: #2c3e50;
+}
+
+/* Safe-comment variant — green instead of slate, so it reads as "info", not "warning" */
+.cad-info-btn.cad-info-safe {
+  background: #1e8a4c;
+}
+.cad-info-btn.cad-info-safe:hover,
+.cad-info-btn.cad-info-safe.cad-info-active {
+  background: #166b3a;
+}
+
+/* Hover-to-reveal — hidden by default so a page full of safe comments
+   doesn't get a green dot next to every single one. Fades in only when
+   hovering the comment itself (adjacent-sibling selector, since the
+   button is inserted right after the comment element) or the button, and
+   stays visible while its trace panel is open (.cad-info-active). */
+.cad-info-btn.cad-info-safe {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+[data-cad="safe"]:hover + .cad-info-btn.cad-info-safe,
+.cad-info-btn.cad-info-safe:hover,
+.cad-info-btn.cad-info-safe.cad-info-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cad-info-btn.cad-info-safe { transition: none; }
+}
+
+.cad-trace-panel {
+  display: block;
+  margin: 8px 0;
+  padding: 18px 20px;
+  background: #161c24;
+  color: #e8edf2;
+  border: 1px solid #2c3a48;
+  border-radius: 12px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+  font-family: -apple-system, "Segoe UI", Arial, sans-serif !important;
+  font-size: 13px !important;
+  line-height: 1.55 !important;
+  width: min(560px, 100%);
+  max-width: min(560px, 100%);
+  z-index: 999999;
+  position: relative;
+  animation: cad-trace-in 0.18s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cad-trace-panel { animation: none; }
+}
+@keyframes cad-trace-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Each step reads as its own card — separation by spacing/background,
+   not just a thin divider line, so a dense panel doesn't blur together. */
+.cad-trace-step {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+}
+.cad-trace-step:last-child { margin-bottom: 0; }
+.cad-trace-label {
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #7fb3d5;
+}
+.cad-trace-words {
+  list-style: none;
+  margin: 2px 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cad-trace-words li {
+  background: rgba(255,255,255,0.07);
+  padding: 5px 10px;
+  border-radius: 6px;
+  line-height: 1.4;
+  /* Dotted underline hints that hovering reveals the word's computation
+     (native title tooltip) — otherwise there's no visual cue it's there. */
+  border-bottom: 1px dotted rgba(255,255,255,0.35);
+  cursor: help;
+}
+.cad-word-calc {
+  font-family: "SF Mono", Consolas, monospace;
+  font-size: 10px;
+  color: #8fa3b8;
+  margin-top: 2px;
+  white-space: nowrap;
+}
+.cad-trace-words code {
+  font-family: "SF Mono", Consolas, monospace;
+  font-size: 12px;
+}
+.cad-push { color: #e74c3c; font-size: 11.5px; margin-left: 5px; font-weight: 600; }
+.cad-trace-detail { color: #cdd6e0; }
+.cad-trace-val { font-weight: 700; color: #f1c40f; }
+.cad-trace-final { background: rgba(241,196,15,0.06); border-color: rgba(241,196,15,0.18); }
+.cad-trace-final .cad-trace-verdict { color: #ff8a80; font-size: 15px; }
+.cad-none { color: #8fa3b8; font-style: italic; }
+
+/* Raw computation block — the actual formula with this comment's real
+   numbers plugged in (Expert Mode only, see result_display.js). */
+.cad-math-block {
+  margin: 6px 0 0;
+  padding: 12px 14px;
+  background: rgba(0,0,0,0.28);
+  border-radius: 8px;
+  font-family: "SF Mono", Consolas, monospace;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: #cdd6e0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}
+.cad-neg-tag { color: #c58fe6; font-size: 10.5px; margin-left: 5px; font-weight: 600; }
+
+/* "Show the full derivation" dropdown — this had NO styling before (default
+   browser <details>/<summary> against a dark panel), which was a big part
+   of the messiness. */
+.cad-trace-panel details.calc {
+  margin-top: 10px;
+  border: 1px dashed rgba(255,255,255,0.14);
+  border-radius: 8px;
+  background: rgba(0,0,0,0.15);
+}
+.cad-trace-panel details.calc summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 9px 13px;
+  font-family: "SF Mono", Consolas, monospace;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #59c2b8;
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+.cad-trace-panel details.calc summary::-webkit-details-marker { display: none; }
+.cad-trace-panel details.calc summary::before { content: "\25b8"; margin-right: 7px; font-size: 9px; }
+.cad-trace-panel details.calc[open] summary::before { content: "\25be"; }
+.cad-trace-panel details.calc .calc-body { padding: 0 13px 12px; }
+.cad-trace-panel details.calc .cad-math-block { margin-top: 0; }
+
+/* Highlight marks applied directly to the real comment text on the page */
+mark.cad-hl-nb,
+mark.cad-hl-neg,
+mark.cad-hl-vader,
+mark.cad-hl-sarcasm {
+  padding: 0 1px;
+  border-radius: 2px;
+  color: inherit;
+  font: inherit;
+}
+mark.cad-hl-nb {
+  background: rgba(231, 76, 60, 0.30);
+  text-decoration: underline solid #e74c3c;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+mark.cad-hl-neg {
+  background: rgba(155, 89, 182, 0.30);
+  text-decoration: underline dashed #b57edc;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+mark.cad-hl-vader {
+  background: rgba(230, 126, 34, 0.28);
+  text-decoration: underline dotted #e67e22;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+mark.cad-hl-sarcasm {
+  background: rgba(52, 152, 219, 0.28);
+  text-decoration: underline wavy #5dade2;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+
+.cad-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 0 0 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.09);
+}
+.cad-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #9aabab;
+}
+.cad-legend-item mark { border-radius: 2px; }
+
+.cad-trace-summary {
+  font-size: 13.5px;
+  color: #d6dde3;
+  font-style: italic;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.09);
+}
+
+.cad-trace-note {
+  font-size: 11.5px;
+  color: #8fc4e8;
+  margin-top: 4px;
+}

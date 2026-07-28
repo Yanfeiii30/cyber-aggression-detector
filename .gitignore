@@ -1,0 +1,16 @@
+# Python virtual environment (regenerate with: cd TRAINING && python -m venv .venv)
+TRAINING/.venv/
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
