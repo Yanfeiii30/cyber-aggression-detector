@@ -207,8 +207,10 @@ input:checked + .slider::before { transform: translateY(-50%) translateX(18px); 
 .test-input-row input {
   flex: 1; padding: 8px 11px;
   border: 1.5px solid var(--line); border-radius: var(--r-md);
-  font-size: var(--fs-md); outline: none; background: var(--surface); transition: all var(--t-med);
+  font-size: var(--fs-md); outline: none; background: var(--surface); color: var(--ink-900);
+  transition: all var(--t-med);
 }
+.test-input-row input::placeholder { color: var(--ink-400); }
 .test-input-row input:focus { border-color: var(--green-700); box-shadow: 0 0 0 3px rgba(21,128,61,0.1); }
 .full-btn {
   width: 100%; padding: 10px;
@@ -636,8 +638,9 @@ input:checked + .slider::before { transform: translateY(-50%) translateX(18px); 
 .keyword-row input {
   flex: 1; padding: 7px 10px; border: 1.5px solid var(--line);
   border-radius: var(--r-sm); font-size: var(--fs-base); outline: none;
-  background: var(--surface-sunk); transition: all var(--t-med);
+  background: var(--surface-sunk); color: var(--ink-900); transition: all var(--t-med);
 }
+.keyword-row input::placeholder { color: var(--ink-400); }
 .keyword-row input:focus { border-color: var(--green-700); background: var(--surface); box-shadow: 0 0 0 3px rgba(21,128,61,0.08); }
 .primary-btn {
   padding: 7px 14px; background: var(--green-700); color: #fff;

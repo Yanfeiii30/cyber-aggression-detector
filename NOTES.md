@@ -89,24 +89,25 @@ All of this is in `EXTENSION/` unless noted.
 
 ## Known open items — not yet fixed
 
-1. **Self-distress dampening has a real gap.** `content.js`'s
-   `isSelfDirectedDistress()` (mirrored in `popup.js`'s injected test
-   script) is supposed to cut the score of self-directed venting like *"I
-   feel so worthless lately"* by 60% (`SELF_DISTRESS_DAMPEN = 0.4`) so it
-   doesn't get treated as an attack on someone else. It currently **fails
-   to do this** — the `PERSON_INSULT_WORDS` gate rejects *any* comment
-   containing a word like "worthless"/"stupid" outright, even when no
-   second-person or third-party marker is present and "I" is the only
-   possible subject. Discussed fix (not applied): only reject on an insult
-   word when there's *also* another-directed marker, or require the
-   first-person word to be a bare subject ("i am/feel") immediately near
-   the insult word rather than just anywhere in the sentence — the latter
-   is needed because a blanket removal of the gate would introduce a
-   *new* false negative ("my teacher is worthless" would wrongly read as
-   self-directed). Needs a decision, then a matching fix in **both**
-   `content.js` and `popup.js` (and ideally `TRAINING/train.py`'s
-   `is_self_directed_distress()` too, to keep Python/JS in sync per the
-   README's "fix logic in both places" rule).
+1. ~~Self-distress dampening gate bug~~ **FIXED.** `isSelfDirectedDistress()`
+   in `content.js` (shared with `popup.js`'s injected test script via the
+   page's global scope) and `TRAINING/vader_helper.py`'s
+   `is_self_directed_distress()` both used to work off "does *any*
+   first-person word appear anywhere in the text," which caused two
+   opposite bugs: **too strict** — "I feel so worthless lately" got
+   rejected the instant "worthless" appeared, before checking who it was
+   about, so it never got dampened; and **too loose** — "this is the
+   dumbest video I've ever seen" got wrongly treated as self-directed
+   distress purely because of "I've" in a generic idiom, dampening a
+   genuinely aggressive comment (verified real score 50.9% → suppressed to
+   ~20%, so it never got blurred). Both fixed by replacing the old
+   word-presence check with an actual self-referential pattern requirement
+   (`SELF_REFERENCE_PATTERN` — "I am/feel/think I'm/hate ___", or
+   "myself") plus an idiom exclusion for "I've/I have (ever) seen/read/
+   heard/watched/played/experienced." Verified against 8 test cases in
+   both JS and Python (regex logic, not the full pipeline in Python's
+   case — `vaderSentiment` isn't installed in `TRAINING/.venv`, a
+   pre-existing environment gap, separate from this fix).
 2. **The 60/40 hybrid weight has no formal derivation anywhere in this
    repo.** Every reference to it (`train.py`, `content.js`, `vader.js`,
    `sop2_report.txt`, the notebook) either states the formula or says it

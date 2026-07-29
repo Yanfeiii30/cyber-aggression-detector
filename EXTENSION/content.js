@@ -55,19 +55,12 @@ function looksEnglish(text, minRatio = 0.15) {
 // ── Self-directed distress — mirrors vader_helper.py's is_self_directed_distress() ──
 // Dampens (doesn't zero) the hybrid score for pure first-person venting,
 // with no "you" address, third-party reference, or insult/profanity vocabulary.
-const FIRST_PERSON_WORDS = new Set(["i","im","ive","id","my","me","mine","myself"]);
 const SECOND_PERSON_WORDS = new Set(["you","youre","your","yours","yourself","u","ur"]);
 const THIRD_PARTY_MARKERS = new Set([
   "he","hes","she","shes","they","theyre","them",
   "admin","admins","people","wikipedia","wikipedians",
   "everyone","everybody","somebody",
 ]);
-const SITUATION_WORDS = new Set(["awful","terrible","horrible","hopeless","pointless","nothing","waste","failure"]);
-const PERSON_INSULT_WORDS = new Set([
-  "worthless","stupid","idiot","idiotic","ugly","pathetic","useless",
-  "dumb","trash","garbage","disgusting","loser","moron","incompetent",
-  "hideous","repulsive","embarrassment","disgrace",
-]); // INSULT_WORDS minus SITUATION_WORDS
 const EXTRA_PROFANITY = new Set([
   "cunt","bitch","dick","dickhead","cock","pussy","fag","faggot",
   "phalus","penis","whore","slut","nigga","nigger","pissed","ass","asshole",
@@ -77,19 +70,30 @@ const SWEAR_WORDS_FOR_DISTRESS_GATE = new Set([
   "hella","freaking","frickin","bloody","effing",
 ]);
 
+// A genuine self-description ("I am/feel/think I'm ___", "I hate myself")
+// — requires the first-person word to actually be the subject of a
+// self-directed statement. Replaces an earlier "any PERSON_INSULT_WORD
+// present → not self-directed" gate, which blocked exactly the comments
+// this function exists to catch (e.g. "I feel so worthless" got rejected
+// the instant "worthless" appeared, before ever checking who it was about).
+const SELF_REFERENCE_PATTERN = /\bi\s*(?:'?m|am|feel|feels|felt|think|thought|hate)\b|\bmyself\b/;
+
+// Common idiom ("the dumbest thing I've ever seen") — "I've" here isn't a
+// confession about the speaker, it's a throwaway superlative aimed at
+// whatever noun precedes it. Excluded so it can't get treated as a
+// self-reference and wrongly dampen a real insult about something else.
+const SELF_REFERENCE_IDIOM_EXCLUSION = /\bi(?:'?ve| have)\s+(?:ever\s+)?(?:seen|read|heard|watched|played|experienced|had)\b/;
+
 function isSelfDirectedDistress(text) {
-  const words = (text.toLowerCase().replace(/'/g, "").match(/[a-z]+/g) || []);
+  const lower = text.toLowerCase().replace(/'/g, "");
+  const words = (lower.match(/[a-z]+/g) || []);
   if (words.length === 0) return false;
   if (words.some(w => SECOND_PERSON_WORDS.has(w))) return false;
   if (words.some(w => THIRD_PARTY_MARKERS.has(w))) return false;
-  if (words.some(w => PERSON_INSULT_WORDS.has(w))) return false;
   if (words.some(w => SWEAR_WORDS_FOR_DISTRESS_GATE.has(w))) return false;
   if (words.some(w => EXTRA_PROFANITY.has(w))) return false;
-  // A single first-person word ("I am not happy") is still purely
-  // self-directed once every other check above has cleared it — nothing
-  // else in the comment could be aggression's target. Requiring 2+ meant
-  // ordinary one-off venting like that fell through undampened.
-  return words.filter(w => FIRST_PERSON_WORDS.has(w)).length >= 1;
+  if (SELF_REFERENCE_IDIOM_EXCLUSION.test(lower)) return false;
+  return SELF_REFERENCE_PATTERN.test(lower);
 }
 
 const SELF_DISTRESS_DAMPEN = 0.4;

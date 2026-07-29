@@ -145,40 +145,55 @@ def get_sarcasm_adjusted_compound(text: str) -> float:
 # Dampens (not zeroes) the hybrid score for pure first-person venting, with
 # no second-person address, third-party reference, or insult/profanity
 # vocabulary.
-FIRST_PERSON_WORDS = {"i", "im", "ive", "id", "my", "me", "mine", "myself"}
 SECOND_PERSON_WORDS = {"you", "youre", "your", "yours", "yourself", "u", "ur"}
 THIRD_PARTY_MARKERS = {
     "he", "hes", "she", "shes", "they", "theyre", "them",
     "admin", "admins", "people", "wikipedia", "wikipedians",
     "everyone", "everybody", "somebody",
 }
-# Situational words (e.g. "awful") are excluded so complaints aren't treated as insults.
-_SITUATION_WORDS = {"awful", "terrible", "horrible", "hopeless", "pointless", "nothing", "waste", "failure"}
-_PERSON_INSULT_WORDS = INSULT_WORDS - _SITUATION_WORDS
 # Broader profanity/slur list, separate from the narrower SWEAR_WORDS set above.
 _EXTRA_PROFANITY = {
     "cunt", "bitch", "dick", "dickhead", "cock", "pussy", "fag", "faggot",
     "phalus", "penis", "whore", "slut", "nigga", "nigger", "pissed", "ass", "asshole",
 }
 
+# A genuine self-description ("I am/feel/think I'm ___", "I hate myself") —
+# requires the first-person word to actually be the subject of a
+# self-directed statement. Replaces an earlier "any _PERSON_INSULT_WORD
+# present -> not self-directed" gate, which blocked exactly the comments
+# this function exists to catch (e.g. "I feel so worthless" was rejected
+# the instant "worthless" appeared, before ever checking who it was about).
+# Mirrored in content.js's SELF_REFERENCE_PATTERN — keep both in sync.
+_SELF_REFERENCE_PATTERN = re.compile(r"\bi\s*(?:'?m|am|feel|feels|felt|think|thought|hate)\b|\bmyself\b")
+
+# Common idiom ("the dumbest thing I've ever seen") — "I've" here isn't a
+# confession about the speaker, it's a throwaway superlative aimed at
+# whatever noun precedes it. Excluded so it can't get treated as a
+# self-reference and wrongly dampen a real insult about something else.
+_SELF_REFERENCE_IDIOM_EXCLUSION = re.compile(
+    r"\bi(?:'?ve| have)\s+(?:ever\s+)?(?:seen|read|heard|watched|played|experienced|had)\b"
+)
+
 def is_self_directed_distress(text: str) -> bool:
     """True if text reads as first-person venting, with no address to "you",
-    no reference to a third party, and no insult or profanity vocabulary.
-    Requires at least two first-person words."""
-    words = re.findall(r"[a-z']+", text.lower().replace("'", ""))
+    no reference to a third party, no swear/profanity vocabulary, and an
+    actual self-referential subject pattern (not just any first-person word
+    appearing anywhere in the text)."""
+    lower = text.lower().replace("'", "")
+    words = re.findall(r"[a-z']+", lower)
     if not words:
         return False
     if any(w in SECOND_PERSON_WORDS for w in words):
         return False
     if any(w in THIRD_PARTY_MARKERS for w in words):
         return False
-    if any(w in _PERSON_INSULT_WORDS for w in words):
-        return False
     if any(w in SWEAR_WORDS for w in words):
         return False
     if any(w in _EXTRA_PROFANITY for w in words):
         return False
-    return sum(1 for w in words if w in FIRST_PERSON_WORDS) >= 2
+    if _SELF_REFERENCE_IDIOM_EXCLUSION.search(lower):
+        return False
+    return bool(_SELF_REFERENCE_PATTERN.search(lower))
 
 
 def is_aggressive_vader(text: str, threshold: float = -0.05) -> tuple:
