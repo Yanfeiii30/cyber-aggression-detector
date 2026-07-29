@@ -562,9 +562,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 ? vader
                 : (nbWeight * nb) + (vaderWeight * vader);
 
-              const ceiling = typeof NON_ENGLISH_BORDERLINE_CEILING !== "undefined" ? NON_ENGLISH_BORDERLINE_CEILING : 0.55;
+              // Non-English text is suppressed entirely, at any score — see
+              // the matching comment in content.js for why the borderline-
+              // only ceiling was removed.
               if (typeof looksEnglish === "function" &&
-                  hybrid >= hybridThreshold && hybrid < ceiling && !looksEnglish(inputText)) {
+                  hybrid >= hybridThreshold && !looksEnglish(inputText)) {
                 hybrid = 0;
               }
 

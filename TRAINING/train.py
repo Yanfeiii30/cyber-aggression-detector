@@ -203,17 +203,14 @@ def predict_vader(text, threshold=0.5):
     score = vader_score_real(text)
     return 1 if score >= threshold else 0
 
-# Suppresses borderline detections on non-English text (both algorithms
-# are English-only). Only applies below this ceiling, not to high-confidence
-# detections.
+# Suppresses ANY detection on non-English text, at any score — the thesis
+# scope is explicitly English-only, so even a confident-looking detection
+# on Tagalog/Taglish text (a real Taglish insult did score 95%+ in
+# testing) is still out of scope and must not be flagged. There used to be
+# a "borderline-only" ceiling here — removed entirely per explicit
+# instruction to keep this strictly English-only. Mirrored in content.js —
+# keep both in sync.
 #
-# Raised from 0.55 — a real Taglish ad scored 56.3% hybrid purely from noisy
-# NB associations on rare/out-of-domain words, a false positive the old
-# ceiling was already too narrow to catch. Mirrored in content.js — keep
-# both in sync. Not re-validated against the held-out test set; re-run this
-# script's evaluation before citing new Precision/Recall/F1 numbers.
-NON_ENGLISH_BORDERLINE_CEILING = 0.70
-
 # Dampening factor (not full suppression) for self-directed distress false positives.
 SELF_DISTRESS_DAMPEN = 0.4
 
@@ -225,7 +222,7 @@ def predict_hybrid(text, model, threshold=HYBRID_THRESHOLD):
     nb_prob    = nb_probability(text, model)
     vader_prob = vader_score_real(text)
     hybrid     = (0.6 * nb_prob) + (0.4 * vader_prob)
-    if threshold <= hybrid < NON_ENGLISH_BORDERLINE_CEILING and not looks_english(text):
+    if hybrid >= threshold and not looks_english(text):
         hybrid = 0.0
     if hybrid >= threshold and is_self_directed_distress(text):
         hybrid *= SELF_DISTRESS_DAMPEN

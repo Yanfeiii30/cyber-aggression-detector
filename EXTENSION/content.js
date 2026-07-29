@@ -28,22 +28,13 @@ const HYBRID_NB_WEIGHT    = 0.6;
 const HYBRID_VADER_WEIGHT = 0.4;
 
 // ── English-language filter — mirrors vader_helper.py's looks_english() ──
-// Suppresses borderline detections on non-English text (both algorithms
-// are English-only). Only applies below this ceiling, not to high-confidence
-// detections.
-//
-// Raised from 0.55: a real Taglish ad ("Pagod na kaka-scroll? Refresh mode
-// muna in real life! Add Bottomless Sarap at Bottomless Saya with NESTEA!")
-// scored 56.3% hybrid purely from noisy NB associations on rare/out-of-
-// domain words (saya, bottomless, life, real...) — a false positive the old
-// 0.55 ceiling was already too narrow to catch, since the score landed just
-// above it. Widened to 0.70 so more of that noisy-accumulation range gets
-// caught; genuinely confident detections (explicit slurs etc., which tend
-// to score much higher via one strong signal rather than several weak
-// noisy ones) still bypass suppression. This wasn't re-validated against
-// the full held-out test set — worth re-running train.py's evaluation to
-// confirm Precision/Recall/F1 don't regress before citing new numbers.
-const NON_ENGLISH_BORDERLINE_CEILING = 0.70;
+// Suppresses ANY detection on non-English text, at any score — the thesis
+// scope is explicitly English-only, so even a confident-looking detection
+// on Tagalog/Taglish text (a real Taglish insult did score 95%+ in testing)
+// is still out of scope and must not be flagged. There used to be a
+// "borderline-only" ceiling here (only suppress scores below some cutoff,
+// let high-confidence ones through regardless of language) — removed
+// entirely per explicit instruction to keep this strictly English-only.
 const COMMON_ENGLISH_WORDS = new Set([
   "the","be","to","of","and","a","in","that","have","i","it","for","not","on","with",
   "he","as","you","do","at","this","but","his","by","from","they","we","say","her",
@@ -742,9 +733,13 @@ async function analyseEl(el, text) {
       score = (HYBRID_NB_WEIGHT * nb) + (HYBRID_VADER_WEIGHT * vader);
     }
 
+    // Non-English text is suppressed entirely, at any score, not just a
+    // "borderline" band — the thesis scope is explicitly English-only, so
+    // even a confident-looking detection on Tagalog/Taglish text (which
+    // did happen — a real Taglish insult scored 95%+) is out of scope and
+    // must not be flagged, not just noisy borderline ones.
     if (mode !== "nb" && mode !== "vader" &&
-        score >= threshold && score < NON_ENGLISH_BORDERLINE_CEILING &&
-        !looksEnglish(analyzedText)) {
+        score >= threshold && !looksEnglish(analyzedText)) {
       score = 0;
     }
 
