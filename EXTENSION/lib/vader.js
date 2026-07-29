@@ -82,6 +82,49 @@ const VADER = (() => {
     "weak":         -2.5, "unworthy":    -2.5, "mediocre":    -1.8,
     "overrated":    -2.0, "replaceable": -1.8,
 
+    // Expanded coverage — plurals/tenses/comparatives of words already
+    // above (e.g. "dumbest" was missing though "dumb" was there, which is
+    // exactly what let a real insult slip through undetected earlier), plus
+    // common modern slang insults not covered by the original list.
+    //
+    // "killed"/"kills"/"killing"/"destroyed"/"destroys"/"destroying" were
+    // tried here and reverted — they fixed literal-violence detection but
+    // caused a real, confirmed regression: "you killed it out there!
+    // destroyed the opposition!" (celebratory sports praise) flipped from
+    // safe to AGGRESSIVE, since VADER has no way to tell literal violence
+    // from violence-as-praise idioms, which are extremely common in casual
+    // English. Deliberately left out rather than special-cased — a small
+    // hardcoded exception list for specific phrases ("killed it", "crushed
+    // it"...) would only cover the exact wordings anticipated, not the
+    // general pattern.
+    "dumbest":      -2.6, "stupider":    -2.9, "stupidest":   -3.0,
+    "stupidly":     -2.5, "idiots":      -3.1, "uglier":      -2.5,
+    "ugliest":      -2.7, "disgustingly":-2.8, "pathetically":-2.6,
+    "horribly":     -2.9, "awfully":     -2.5, "terribly":    -2.6,
+    "hurts":        -1.5, "hurting":     -1.6, "hurtful":     -2.4,
+    "attacked":     -1.6, "attacks":     -1.5, "attacking":   -1.6,
+    "threatened":   -2.9, "threatens":   -2.8, "threatening": -2.9,
+    "hated":        -3.0, "hates":       -3.0, "hating":      -2.9,
+    "despised":     -3.0, "despises":    -3.0, "loathed":     -3.0,
+    "loathes":      -3.0, "liars":       -2.5, "lying":       -2.3,
+    "cowards":      -2.2, "cowardly":    -2.4, "disgraceful": -2.7,
+    "shamefully":   -2.5, "uselessly":   -2.5, "failures":    -2.4,
+    "failed":       -2.2, "fails":       -2.0, "pitifully":   -2.5,
+    "weaker":       -2.2, "weakest":     -2.4, "weakly":      -1.8,
+    "ignorantly":   -2.4, "incompetently":-2.5,"hopelessly":  -2.3,
+    "helplessly":   -1.8, "crazier":     -0.6, "craziest":    -0.6,
+    "insanely":     -0.6, "maniacs":     -2.4, "annoyed":     -1.4,
+    "annoys":       -1.5, "annoyingly":  -1.6, "ruder":       -1.8,
+    "rudest":       -2.0, "rudely":      -1.8, "crueler":     -2.4,
+    "cruelest":     -2.6, "cruelly":     -2.4, "unkindly":    -1.7,
+    "creepy":       -2.2,
+    // Modern internet-slang insults — common in real cyberbullying/mockery
+    // comments but absent from the original, more "classic" insult list.
+    "cringe":       -1.8, "cringey":     -1.8, "mid":         -1.2,
+    "clown":        -2.0, "clownish":    -1.8, "flop":        -1.8,
+    "washed":       -1.5, "npc":         -1.6, "simp":        -1.4,
+    "bum":          -1.9, "lame":        -1.6, "pest":        -1.8,
+
     // Positives
     "good":         1.9,  "great":       3.1,  "love":        3.0,
     "happy":        2.7,  "excellent":   3.2,  "wonderful":   3.4,
@@ -96,6 +139,26 @@ const VADER = (() => {
     // Positive words whose NEGATION ("don't deserve", "can't belong") signals aggression
     "deserve":      2.5,  "belong":      2.0,  "worthy":      2.5,
     "capable":      2.0,  "qualified":   2.0,
+
+    // Expanded coverage — same rationale as the negative side above:
+    // inflected forms of existing positive words, plus modern praise slang.
+    "better":       1.9,  "greater":     2.8,  "greatest":    3.2,
+    "happier":      2.5,  "happiest":    2.8,  "happily":     2.3,
+    "excellently":  3.0,  "wonderfully": 3.2,  "amazingly":   3.1,
+    "fantastically":3.4,  "kinder":      2.1,  "kindest":     2.4,
+    "kindly":       2.0,  "nicer":       1.7,  "nicest":      1.9,
+    "nicely":       1.7,  "brilliantly": 2.8,  "enjoyed":     2.2,
+    "enjoys":       2.1,  "enjoying":    2.2,  "enjoyable":   2.3,
+    "funny":        2.0,  "pleasing":    2.1,  "gratefully":  2.5,
+    "perfectly":    3.0,  "superbly":    3.1,  "positively":  2.3,
+    "peacefully":   2.2,  "calmer":      1.8,  "calmest":     2.0,
+    "calmly":       1.8,  "deserved":    2.3,  "deserves":    2.3,
+    "deserving":    2.2,  "worthier":    2.3,
+    // Modern praise slang — the positive-side counterpart to the negative
+    // slang added above, for the same social-media-comment context.
+    "legend":       2.8,  "legendary":   3.0,  "slay":        2.6,
+    "slayed":       2.6,  "fire":        2.2,  "banger":      2.4,
+    "goated":       3.0,  "iconic":      2.6,
   };
 
   // ── Common joined-word slang — split before tokenizing ───────────────────

@@ -31,7 +31,19 @@ const HYBRID_VADER_WEIGHT = 0.4;
 // Suppresses borderline detections on non-English text (both algorithms
 // are English-only). Only applies below this ceiling, not to high-confidence
 // detections.
-const NON_ENGLISH_BORDERLINE_CEILING = 0.55;
+//
+// Raised from 0.55: a real Taglish ad ("Pagod na kaka-scroll? Refresh mode
+// muna in real life! Add Bottomless Sarap at Bottomless Saya with NESTEA!")
+// scored 56.3% hybrid purely from noisy NB associations on rare/out-of-
+// domain words (saya, bottomless, life, real...) — a false positive the old
+// 0.55 ceiling was already too narrow to catch, since the score landed just
+// above it. Widened to 0.70 so more of that noisy-accumulation range gets
+// caught; genuinely confident detections (explicit slurs etc., which tend
+// to score much higher via one strong signal rather than several weak
+// noisy ones) still bypass suppression. This wasn't re-validated against
+// the full held-out test set — worth re-running train.py's evaluation to
+// confirm Precision/Recall/F1 don't regress before citing new numbers.
+const NON_ENGLISH_BORDERLINE_CEILING = 0.70;
 const COMMON_ENGLISH_WORDS = new Set([
   "the","be","to","of","and","a","in","that","have","i","it","for","not","on","with",
   "he","as","you","do","at","this","but","his","by","from","they","we","say","her",
@@ -45,9 +57,28 @@ const COMMON_ENGLISH_WORDS = new Set([
   "very","too","here","how's","thank","thanks","please","sorry",
 ]);
 
+// A ratio-of-English-words check alone can be fooled by Taglish text that
+// happens to contain a few short English prepositions ("in", "at", "with")
+// — exactly the NESTEA ad case above, which cleared the English ratio on
+// those three words alone despite being mostly Tagalog. This gives the
+// filter explicit positive evidence of Tagalog too, not just an absence of
+// English, so mixed-language content gets caught either way.
+const COMMON_TAGALOG_WORDS = new Set([
+  "ang","ng","mga","na","ay","ako","ikaw","siya","kami","tayo","kayo","sila",
+  "mo","ko","niya","natin","namin","nila","akin","iyo","kanya",
+  "hindi","oo","opo","po","ito","iyan","iyon","yun","yung","dito","diyan","doon",
+  "din","rin","lang","pa","muna","kasi","kung","pero","para","dahil",
+  "may","meron","mayroon","wala","gusto","ayaw","salamat","paalam","kumusta",
+  "maganda","mahal","araw","gabi","umaga","hapon","ngayon","bukas","kahapon",
+  "talaga","naman","sobrang","grabe","pagod","saya","masaya","sarap","masarap",
+  "tara","paano","bakit","sino","ano","kailan","saan","alin","sana","siguro","baka","lahat","yata",
+]);
+
 function looksEnglish(text, minRatio = 0.15) {
   const words = (text.toLowerCase().match(/[a-z']+/g) || []);
   if (words.length < 3) return true; // too short to judge reliably
+  const tagalogHits = words.filter(w => COMMON_TAGALOG_WORDS.has(w)).length;
+  if ((tagalogHits / words.length) >= minRatio) return false;
   const hits = words.filter(w => COMMON_ENGLISH_WORDS.has(w)).length;
   return (hits / words.length) >= minRatio;
 }
@@ -114,12 +145,88 @@ const SKIP_SELECTORS = [
   "[role='toolbar']", "[role='complementary']",
   "script", "style", "noscript", "input", "textarea",
   "select", "button", "code", "pre",
+  // Custom-widget buttons/menus built as <div role="..."> instead of real
+  // <button>/<select> tags — extremely common on React-heavy sites like
+  // Facebook/Instagram, which the tag-name checks above miss entirely.
+  "[role='button']", "[role='menu']", "[role='menuitem']",
+  "[role='option']", "[role='tooltip']",
   // Skip ads and sponsored content
   "[data-ad]", "[aria-label='Sponsored']",
   // Skip UI navigation only — NOT comment content
   "[class*='nav']", "[class*='menu']",
   "[class*='sidebar']", "[class*='toolbar']",
 ];
+
+// ── Visually-hidden text (screen-reader-only labels) ───────────────────────
+// A site can also hide accessibility text ("Open menu for X sponsored
+// content") inside an element with no distinguishing tag/role/class at
+// all — just CSS that visually hides it. Checking actual computed style
+// catches the standard "sr-only" hiding technique regardless of what a
+// site names its classes, which the selector-based checks above can't.
+function isVisuallyHidden(el) {
+  let node = el, depth = 0;
+  while (node && node.nodeType === 1 && depth < 6) {
+    let style;
+    try { style = getComputedStyle(node); } catch(e) { return false; }
+    if (style) {
+      if (style.display === "none" || style.visibility === "hidden") return true;
+      const w = node.offsetWidth, h = node.offsetHeight;
+      if (w <= 1 && h <= 1 && style.overflow === "hidden") return true; // classic "clip" sr-only pattern
+      if (style.position === "absolute" &&
+          (style.clip === "rect(0px, 0px, 0px, 0px)" || style.clipPath === "inset(50%)")) return true;
+    }
+    node = node.parentElement;
+    depth++;
+  }
+  return false;
+}
+
+// ── Post captions vs. comments — only comments should be scanned, not a
+// post's own caption/body text. Two earlier approaches both guessed at
+// Facebook's container/action markup and both broke across different
+// views (feed, post-permalink modal, profile timeline all differ). This
+// uses a signal confirmed directly from real screenshots instead of a
+// guess: a post's own timestamp is shown in ABSOLUTE form ("July 2 at
+// 8:06 AM", "May 27, 2025"), while a comment's timestamp is shown in
+// RELATIVE shorthand ("3w", "2h", "5d"). Finding the nearest timestamp
+// that precedes a piece of text (walking backward through the page)
+// tells you which kind of text it is, regardless of what container
+// happens to wrap it.
+//
+// Risk, stated plainly: still a heuristic. If neither timestamp pattern
+// is found nearby, this defaults to treating the text as a comment
+// (scan it) rather than a caption (skip it) — safer to over-scan than to
+// silently miss a real aggressive comment, per the same reasoning as the
+// UI_LABEL_PHRASES comment below documenting an earlier over-broad filter
+// that got reverted for exactly that kind of miss.
+const RELATIVE_TIME_RE = /^\d+\s*(s|sec|secs|m|min|mins|h|hr|hrs|d|w|mo|y|yr)$/i;
+const ABSOLUTE_TIME_RE = /\b(january|february|march|april|may|june|july|august|september|october|november|december)\s+\d{1,2}\b|\bat\s+\d{1,2}:\d{2}\s*(am|pm)?\b/i;
+
+function findPrecedingTimestampType(el) {
+  let node = el, steps = 0;
+  while (node && steps < 60) {
+    if (node.previousElementSibling) {
+      node = node.previousElementSibling;
+    } else if (node.parentElement) {
+      node = node.parentElement;
+      steps++;
+      continue;
+    } else {
+      break;
+    }
+    steps++;
+    const t = node.textContent.trim();
+    if (t.length > 0 && t.length < 40) {
+      if (RELATIVE_TIME_RE.test(t)) return "comment";
+      if (ABSOLUTE_TIME_RE.test(t)) return "caption";
+    }
+  }
+  return null;
+}
+
+function isPostCaptionNotComment(el) {
+  return findPrecedingTimestampType(el) === "caption";
+}
 
 // ── Short interactive-control labels ("View more comments", "See all
 // friends", "Like", "Comment as X") — matched by their own exact, short
@@ -487,6 +594,15 @@ function collectByTreeWalker(root) {
 
       // Skip UI/navigation elements
       if (shouldSkipElement(parent)) return NodeFilter.FILTER_REJECT;
+
+      // Skip screen-reader-only accessibility text ("Open menu for X
+      // sponsored content") that has no distinguishing tag/role/class.
+      try { if (isVisuallyHidden(parent)) return NodeFilter.FILTER_REJECT; } catch(e) {}
+
+      // Skip a post's own caption text — only comments should be scanned
+      // (real comments replying to the post still get scanned — see
+      // isPostCaptionNotComment).
+      try { if (isPostCaptionNotComment(parent)) return NodeFilter.FILTER_REJECT; } catch(e) {}
 
       // Always accept if it matches a custom blocklist keyword — bypass length/word filters
       if (CustomFilter.matches(text)) return NodeFilter.FILTER_ACCEPT;

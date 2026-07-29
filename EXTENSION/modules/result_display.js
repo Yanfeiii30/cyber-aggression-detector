@@ -15,36 +15,43 @@ const ResultDisplay = (() => {
     }[c]));
   }
 
-  // ── Hover tooltip text for a single NB word chip — the exact Laplace-
-  // smoothed likelihood computation behind that word's push value, so the
-  // "how was this computed" answer is right on the word, not just buried in
-  // the collapsible derivation below. Empty string if the vocab.json loaded
-  // doesn't carry the raw counts (older cached version).
+  function _tipRow(label, value) {
+    return `<div class="cad-word-tooltip-row"><span class="lbl">${label}</span><span class="val">${value}</span></div>`;
+  }
+
+  // ── Hover card HTML for a single NB word chip — the exact Laplace-
+  // smoothed likelihood computation behind that word's push value, broken
+  // into clean labeled rows instead of one long plain-text native tooltip,
+  // so the "how was this computed" answer is right on the word. Empty
+  // string if the vocab.json loaded doesn't carry the raw counts (older
+  // cached version).
   function _nbWordTooltip(m, nb) {
     if (nb.totalWords0 == null) return "";
     const tw0 = nb.totalWords0, tw1 = nb.totalWords1, vsz = nb.vocabSize;
     const c0 = m.rawCount0 ?? 0, c1 = m.rawCount1 ?? 0;
-    const lines = [
-      `"${m.token}" appeared ${c1.toLocaleString()}x among ${tw1.toLocaleString()} aggressive-class words, ${c0.toLocaleString()}x among ${tw0.toLocaleString()} safe-class words.`,
-      `ll(aggressive) = log((${c1}+1)/(${tw1.toLocaleString()}+${vsz.toLocaleString()})) = ${m.rawLl1.toFixed(4)}`,
-      `ll(safe)       = log((${c0}+1)/(${tw0.toLocaleString()}+${vsz.toLocaleString()})) = ${m.rawLl0.toFixed(4)}`,
-    ];
-    if (m.wasDampened) {
-      lines.push(`Negated word — dampened toward the average of both: ll(aggressive)=${m.ll1.toFixed(4)}, ll(safe)=${m.ll0.toFixed(4)}`);
-    }
-    lines.push(`push toward aggressive = ll(aggressive) − ll(safe) = ${m.ll1.toFixed(4)} − (${m.ll0.toFixed(4)}) = ${m.pushToAggressive >= 0 ? "+" : ""}${m.pushToAggressive.toFixed(4)}`);
-    return lines.join("\n");
+    const rows =
+      _tipRow("seen in aggressive comments", `${c1.toLocaleString()}&times;`) +
+      _tipRow("seen in safe comments", `${c0.toLocaleString()}&times;`) +
+      _tipRow("ll(aggressive)", `log((${c1}+1)/(${tw1.toLocaleString()}+${vsz.toLocaleString()})) = ${m.rawLl1.toFixed(3)}`) +
+      _tipRow("ll(safe)", `log((${c0}+1)/(${tw0.toLocaleString()}+${vsz.toLocaleString()})) = ${m.rawLl0.toFixed(3)}`);
+    const dampenNote = m.wasDampened
+      ? `<div class="cad-word-tooltip-note">Negated word — dampened 75% toward the average of both, so one rare "not_X" phrase can't single-handedly flip the verdict.</div>`
+      : "";
+    const pushColor = m.pushToAggressive >= 0 ? "#ff8a80" : "#7ee6a8";
+    const final = `<div class="cad-word-tooltip-final">push = ll(agg) &minus; ll(safe) = ${m.ll1.toFixed(3)} &minus; (${m.ll0.toFixed(3)}) = <span style="color:${pushColor}">${m.pushToAggressive >= 0 ? "+" : ""}${m.pushToAggressive.toFixed(3)}</span></div>`;
+    return `<div class="cad-word-tooltip-title">"${_esc(m.token)}"</div>${rows}${dampenNote}${final}`;
   }
 
-  // ── Hover tooltip text for a single VADER word chip — base lexicon value,
+  // ── Hover card HTML for a single VADER word chip — base lexicon value,
   // which adjustments applied, and the resulting final valence.
   function _vaderWordTooltip(w) {
-    const lines = [`"${w.word}" base lexicon valence = ${w.baseValence >= 0 ? "+" : ""}${w.baseValence.toFixed(2)}`];
-    if (w.negated)     lines.push(`Negated by a word 1-3 tokens before it → multiplied by −0.74`);
-    if (w.boosted)     lines.push(`Boosted by a nearby intensifier ("very", "so", etc.)`);
-    if (w.capsBoosted) lines.push(`ALL CAPS emphasis applied`);
-    lines.push(`final valence = ${w.valence >= 0 ? "+" : ""}${w.valence.toFixed(4)}`);
-    return lines.join("\n");
+    let rows = _tipRow("base lexicon valence", `${w.baseValence >= 0 ? "+" : ""}${w.baseValence.toFixed(2)}`);
+    if (w.negated)     rows += _tipRow("negation applied", "&times; &minus;0.74");
+    if (w.boosted)     rows += _tipRow("booster applied", `nearby intensifier`);
+    if (w.capsBoosted) rows += _tipRow("ALL CAPS emphasis", "applied");
+    const valColor = w.valence < 0 ? "#ff8a80" : "#7ee6a8";
+    const final = `<div class="cad-word-tooltip-final">final valence = <span style="color:${valColor}">${w.valence >= 0 ? "+" : ""}${w.valence.toFixed(3)}</span></div>`;
+    return `<div class="cad-word-tooltip-title">"${_esc(w.word)}"</div>${rows}${final}`;
   }
 
   // Display-only filter — words that carry a statistical push but read as
@@ -231,7 +238,9 @@ const ResultDisplay = (() => {
       const calcLine = (m.ll0 != null && m.ll1 != null)
         ? `<div class="cad-word-calc">agg ${m.ll1.toFixed(2)} &minus; safe ${m.ll0.toFixed(2)}</div>`
         : "";
-      return `<li${tip ? ` title="${_esc(tip)}"` : ""}><code>${_esc(m.token)}</code>${negTag}<span class="cad-push">${sign}${m.pushToAggressive.toFixed(2)}</span>${calcLine}</li>`;
+      const pushCls = m.pushToAggressive >= 0 ? "agg" : "safe";
+      const tooltipHtml = tip ? `<div class="cad-word-tooltip">${tip}</div>` : "";
+      return `<li><code>${_esc(m.token)}</code>${negTag}<span class="cad-push ${pushCls}">${sign}${m.pushToAggressive.toFixed(2)}</span>${calcLine}${tooltipHtml}</li>`;
     }).join("");
     const wordsHtml = words || `<li class="cad-none">No strong signal words matched.</li>`;
 
@@ -247,7 +256,9 @@ const ResultDisplay = (() => {
       // Always-visible calc line — base lexicon value the adjustments (shown
       // via the (negated/boosted/CAPS) tag already on this chip) started from.
       const calcLine = `<div class="cad-word-calc">base ${w.baseValence >= 0 ? "+" : ""}${w.baseValence.toFixed(1)} &rarr; ${w.valence >= 0 ? "+" : ""}${w.valence.toFixed(2)}</div>`;
-      return `<li title="${_esc(tip)}"><code>${_esc(w.word)}</code><span class="cad-push">${w.valence >= 0 ? "+" : ""}${w.valence.toFixed(1)}</span>${flags ? ` <span class="cad-neg-tag">(${flags})</span>` : ""}${calcLine}</li>`;
+      const pushCls = w.valence < 0 ? "agg" : "safe"; // opposite of NB's sign convention above — negative valence = leans aggressive
+      const tooltipHtml = `<div class="cad-word-tooltip">${tip}</div>`;
+      return `<li><code>${_esc(w.word)}</code><span class="cad-push ${pushCls}">${w.valence >= 0 ? "+" : ""}${w.valence.toFixed(1)}</span>${flags ? ` <span class="cad-neg-tag">(${flags})</span>` : ""}${calcLine}${tooltipHtml}</li>`;
     }).join("");
     const vaderWordsHtml = vaderWordsList || `<li class="cad-none">No lexicon words matched — score came from punctuation/caps only.</li>`;
 
@@ -420,11 +431,13 @@ const ResultDisplay = (() => {
       <div class="cad-trace-summary">${_esc(summary)}</div>
       <div class="cad-trace-step">
         <span class="cad-trace-label">1 &middot; Naive Bayes</span>
+        <span class="cad-trace-sublabel">(+ leans aggressive, &minus; leans safe)</span>
         <ul class="cad-trace-words">${wordsHtml}</ul>
         <span class="cad-trace-val">${nbPct}% aggressive</span>
       </div>
       <div class="cad-trace-step">
         <span class="cad-trace-label">2 &middot; VADER</span>
+        <span class="cad-trace-sublabel">(+ leans safe, &minus; leans aggressive &mdash; opposite of NB above)</span>
         <ul class="cad-trace-words">${vaderWordsHtml}</ul>
         <span class="cad-trace-detail">compound ${vader.compound ?? 0}</span>
         ${sarcasmLine}
@@ -484,8 +497,8 @@ const ResultDisplay = (() => {
   // blurred comments) and annotate() (safe comments left visible) ──────────
   function _createInfoButton(el, score, mode, trace, isAgg, title) {
     // In-text word highlighting only for aggressive/blurred comments — a
-    // safe comment stays untouched on the page, with just the info button
-    // for anyone who wants the breakdown.
+    // safe comment's text stays untouched on the page; the info button and
+    // panel still explain the score, just without marking up the comment.
     const usedClasses = isAgg ? _applyInPlaceHighlight(el, trace) : new Set();
 
     const infoBtn = document.createElement("button");

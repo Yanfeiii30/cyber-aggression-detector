@@ -264,6 +264,7 @@
           <div class="algo-step-body">
             <div class="algo-step-title">Class Prior <span class="algo-step-sub">— baseline, before reading a single word</span></div>
             <p>Computed once from real training document counts:</p>
+            <span class="formula-tag">✓ Exact formula — naive_bayes.js / train.py</span>
             <div class="formula-box"><span class="hl-pos">log_prior(safe)</span> = log(38,940 / 51,920) = <strong>-0.2877</strong></div>
             <div class="formula-box"><span class="hl-neg">log_prior(aggressive)</span> = log(12,980 / 51,920) = <strong>-1.3863</strong></div>
             <p>Starts biased toward "safe" — <span class="hl-const">75%</span> of training comments are safe.</p>
@@ -275,6 +276,7 @@
           <div class="algo-step-body">
             <div class="algo-step-title">Score each matched word <span class="algo-step-sub">— Laplace / add-1 smoothing</span></div>
             <p>For every token that exists in the 99,561-word trained vocabulary:</p>
+            <span class="formula-tag">✓ Exact formula — naive_bayes.js / train.py</span>
             <div class="formula-box"><span class="hl-term">ll(class)</span> = log( (word count in class <span class="hl-const">+ 1</span>) / (total words in class + vocab size) )</div>
             <p>Real totals used: 1,604,569 safe-class words, 427,093 aggressive-class words. The <span class="hl-const">+1</span> (Laplace smoothing) stops a word NB has never seen in one class from getting a log(0) = −infinity score.</p>
           </div>
@@ -292,6 +294,7 @@
           <span class="algo-step-num">5</span>
           <div class="algo-step-body">
             <div class="algo-step-title">Add it all up</div>
+            <span class="formula-tag">✓ Exact formula — naive_bayes.js / train.py</span>
             <div class="formula-box"><span class="hl-pos">score_safe</span> = <span class="hl-pos">log_prior(safe)</span> + sum of every matched word's <span class="hl-pos">ll(safe)</span></div>
             <div class="formula-box"><span class="hl-neg">score_aggressive</span> = <span class="hl-neg">log_prior(aggressive)</span> + sum of every matched word's <span class="hl-neg">ll(aggressive)</span></div>
           </div>
@@ -301,6 +304,7 @@
           <span class="algo-step-num">6</span>
           <div class="algo-step-body">
             <div class="algo-step-title">Convert to a probability <span class="algo-step-sub">— softmax</span></div>
+            <span class="formula-tag">✓ Exact formula — naive_bayes.js / train.py</span>
             <div class="formula-box"><span class="hl-neg">P(aggressive)</span> = e^(<span class="hl-neg">score_aggressive</span>) / ( e^(<span class="hl-pos">score_safe</span>) + e^(<span class="hl-neg">score_aggressive</span>) )</div>
           </div>
         </div>
@@ -378,6 +382,7 @@
           <div class="algo-step-body">
             <div class="algo-step-title">Sum and normalize</div>
             <p>Add every word's final valence together, then squash it to a -1..+1 "compound" score:</p>
+            <span class="formula-tag">✓ Exact formula — vader.js / vader_helper.py</span>
             <div class="formula-box"><span class="hl-term">compound</span> = sum / sqrt( sum&sup2; + <span class="hl-const">&alpha;</span> )   — <span class="hl-const">&alpha; &asymp; 10-15</span></div>
           </div>
         </div>
@@ -402,6 +407,7 @@
           <span class="algo-step-num">8</span>
           <div class="algo-step-body">
             <div class="algo-step-title">Decision</div>
+            <span class="formula-tag">✓ Exact formula — vader.js / vader_helper.py</span>
             <div class="formula-box"><span class="hl-neg">aggression_score</span> = max(0, -compound) — only negative sentiment counts; positive text always scores 0</div>
             <div class="formula-box"><span class="hl-neg">aggression_score</span> &ge; <span class="hl-const">50%</span> &rarr; VADER says <span class="hl-neg">AGGRESSIVE</span></div>
           </div>

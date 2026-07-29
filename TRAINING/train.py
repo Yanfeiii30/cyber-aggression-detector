@@ -206,7 +206,13 @@ def predict_vader(text, threshold=0.5):
 # Suppresses borderline detections on non-English text (both algorithms
 # are English-only). Only applies below this ceiling, not to high-confidence
 # detections.
-NON_ENGLISH_BORDERLINE_CEILING = 0.55
+#
+# Raised from 0.55 — a real Taglish ad scored 56.3% hybrid purely from noisy
+# NB associations on rare/out-of-domain words, a false positive the old
+# ceiling was already too narrow to catch. Mirrored in content.js — keep
+# both in sync. Not re-validated against the held-out test set; re-run this
+# script's evaluation before citing new Precision/Recall/F1 numbers.
+NON_ENGLISH_BORDERLINE_CEILING = 0.70
 
 # Dampening factor (not full suppression) for self-directed distress false positives.
 SELF_DISTRESS_DAMPEN = 0.4

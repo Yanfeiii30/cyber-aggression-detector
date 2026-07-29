@@ -102,25 +102,10 @@
   background: #166b3a;
 }
 
-/* Hover-to-reveal — hidden by default so a page full of safe comments
-   doesn't get a green dot next to every single one. Fades in only when
-   hovering the comment itself (adjacent-sibling selector, since the
-   button is inserted right after the comment element) or the button, and
-   stays visible while its trace panel is open (.cad-info-active). */
-.cad-info-btn.cad-info-safe {
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.15s ease;
-}
-[data-cad="safe"]:hover + .cad-info-btn.cad-info-safe,
-.cad-info-btn.cad-info-safe:hover,
-.cad-info-btn.cad-info-safe.cad-info-active {
-  opacity: 1;
-  pointer-events: auto;
-}
-@media (prefers-reduced-motion: reduce) {
-  .cad-info-btn.cad-info-safe { transition: none; }
-}
+/* Always visible, same as the aggressive-comment button — click it
+   directly instead of having to hover the comment first to reveal it.
+   (Previously hidden-until-hover to reduce clutter on pages full of safe
+   comments, but that made it too easy to miss/hard to click reliably.) */
 
 .cad-trace-panel {
   display: block;
@@ -168,6 +153,14 @@
   text-transform: uppercase;
   color: #7fb3d5;
 }
+.cad-trace-sublabel {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: #8a97a5;
+  margin-left: 6px;
+  text-transform: none;
+  letter-spacing: normal;
+}
 .cad-trace-words {
   list-style: none;
   margin: 2px 0;
@@ -177,12 +170,13 @@
   gap: 8px;
 }
 .cad-trace-words li {
+  position: relative;
   background: rgba(255,255,255,0.07);
   padding: 5px 10px;
   border-radius: 6px;
   line-height: 1.4;
-  /* Dotted underline hints that hovering reveals the word's computation
-     (native title tooltip) — otherwise there's no visual cue it's there. */
+  /* Dotted underline hints that hovering reveals the word's computation —
+     otherwise there's no visual cue the custom tooltip below exists. */
   border-bottom: 1px dotted rgba(255,255,255,0.35);
   cursor: help;
 }
@@ -193,11 +187,101 @@
   margin-top: 2px;
   white-space: nowrap;
 }
+
+/* ── Custom word-score hover card — replaces the native `title` tooltip
+   (plain, slow, unstyled) with a proper dark card showing the exact
+   computation as clean labeled rows instead of one run-on line. ────────── */
+.cad-word-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  width: max-content;
+  max-width: 250px;
+  background: #0d1218;
+  border: 1px solid #2c3a48;
+  border-radius: 9px;
+  padding: 10px 12px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+  font-family: -apple-system, "Segoe UI", Arial, sans-serif;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #cdd6e0;
+  text-align: left;
+  white-space: normal;
+  cursor: auto;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .15s ease, transform .15s ease, visibility .15s;
+  z-index: 1000000;
+}
+.cad-trace-words li:hover .cad-word-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+.cad-word-tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #0d1218;
+}
+.cad-word-tooltip-title {
+  font-weight: 700;
+  color: #fff;
+  font-size: 12px;
+  margin-bottom: 7px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.cad-word-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.cad-word-tooltip-row .lbl {
+  color: #8a97a5;
+  font-size: 10.5px;
+  flex-shrink: 0;
+}
+.cad-word-tooltip-row .val {
+  color: #e8edf2;
+  font-family: "SF Mono", Consolas, monospace;
+  font-size: 10px;
+  text-align: right;
+}
+.cad-word-tooltip-final {
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  font-weight: 700;
+  font-size: 11.5px;
+  font-family: "SF Mono", Consolas, monospace;
+}
+.cad-word-tooltip-note {
+  margin-top: 5px;
+  font-style: italic;
+  color: #8a97a5;
+  font-size: 10.5px;
+  line-height: 1.4;
+}
 .cad-trace-words code {
   font-family: "SF Mono", Consolas, monospace;
   font-size: 12px;
 }
-.cad-push { color: #e74c3c; font-size: 11.5px; margin-left: 5px; font-weight: 600; }
+/* Base sizing/weight shared by both variants below — color depends on
+   which way the word actually leans, not a fixed always-red rule (that
+   used to color EVERY word red regardless of sign, including ones that
+   pushed toward safe). */
+.cad-push { font-size: 11.5px; margin-left: 5px; font-weight: 600; }
+.cad-push.agg  { color: #e74c3c; }
+.cad-push.safe { color: #2ecc71; }
 .cad-trace-detail { color: #cdd6e0; }
 .cad-trace-val { font-weight: 700; color: #f1c40f; }
 .cad-trace-final { background: rgba(241,196,15,0.06); border-color: rgba(241,196,15,0.18); }
@@ -281,7 +365,6 @@ mark.cad-hl-sarcasm {
   text-decoration-thickness: 2px;
   text-underline-offset: 2px;
 }
-
 .cad-legend {
   display: flex;
   flex-wrap: wrap;

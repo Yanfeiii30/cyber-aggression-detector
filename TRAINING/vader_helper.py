@@ -46,13 +46,34 @@ COMMON_ENGLISH_WORDS = {
     "very","too","here","how's","thank","thanks","please","sorry",
 }
 
+# A ratio-of-English-words check alone can be fooled by Taglish text that
+# happens to contain a few short English prepositions ("in", "at", "with")
+# — e.g. a Taglish ad scoring "English enough" on those three words alone
+# despite being mostly Tagalog. Gives the filter explicit positive evidence
+# of Tagalog too, not just an absence of English. Mirrored in content.js's
+# COMMON_TAGALOG_WORDS — keep both in sync.
+COMMON_TAGALOG_WORDS = {
+    "ang","ng","mga","na","ay","ako","ikaw","siya","kami","tayo","kayo","sila",
+    "mo","ko","niya","natin","namin","nila","akin","iyo","kanya",
+    "hindi","oo","opo","po","ito","iyan","iyon","yun","yung","dito","diyan","doon",
+    "din","rin","lang","pa","muna","kasi","kung","pero","para","dahil",
+    "may","meron","mayroon","wala","gusto","ayaw","salamat","paalam","kumusta",
+    "maganda","mahal","araw","gabi","umaga","hapon","ngayon","bukas","kahapon",
+    "talaga","naman","sobrang","grabe","pagod","saya","masaya","sarap","masarap",
+    "tara","paano","bakit","sino","ano","kailan","saan","alin","sana","siguro","baka","lahat","yata",
+}
+
 
 def looks_english(text: str, min_ratio: float = 0.15) -> bool:
     """Rough language filter — true if text has enough common English words
-    to be worth scoring. Text shorter than 3 words is always allowed through."""
+    to be worth scoring, and not enough Tagalog words to say otherwise.
+    Text shorter than 3 words is always allowed through."""
     words = re.findall(r"[a-z']+", text.lower())
     if len(words) < 3:
         return True
+    tagalog_hits = sum(1 for w in words if w in COMMON_TAGALOG_WORDS)
+    if (tagalog_hits / len(words)) >= min_ratio:
+        return False
     hits = sum(1 for w in words if w in COMMON_ENGLISH_WORDS)
     return (hits / len(words)) >= min_ratio
 

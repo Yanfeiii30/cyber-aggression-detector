@@ -497,6 +497,19 @@ input:checked + .slider::before { transform: translateY(-50%) translateX(18px); 
   color: var(--ink-700);
 }
 .formula-box + .formula-box { margin-top: 4px; }
+/* Marks a formula as the literal, unmodified formula used in the real code
+   (naive_bayes.js/vader.js/train.py) — not a simplified or illustrative
+   stand-in. Placed right above the formula-box it verifies. */
+.formula-tag {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 9px; font-weight: 800; letter-spacing: 0.3px; text-transform: uppercase;
+  color: var(--blue-500); background: rgba(59,130,246,0.1);
+  border: 1px solid rgba(59,130,246,0.3); border-radius: var(--r-pill);
+  padding: 2px 7px 2px 6px; margin: 4px 0 0;
+}
+.formula-tag:first-child { margin-top: 4px; }
+.formula-tag + .formula-box,
+.formula-tag + .formula-box + .formula-box { margin-top: 3px; }
 .algo-chip-row { display: flex; flex-wrap: wrap; gap: 5px; margin: 4px 0; }
 .algo-chip {
   font-family: "SF Mono", Consolas, monospace; font-size: 10.5px; font-weight: 700;
@@ -732,6 +745,11 @@ footer {
 :root[data-theme="dark"] .highlighted-sentence .hl-neg {
   background: #3b0764; color: #e9d5ff; border-bottom-color: #c084fc;
 }
+/* .hl-safe pairs background: var(--green-100) with color: var(--green-900)
+   — in dark mode --green-100 becomes a dark green wash (#14532d) while
+   --green-900 stays unchanged (also #14532d, kept fixed for its other role
+   as a button-hover fill elsewhere) — same color on both, invisible text. */
+:root[data-theme="dark"] .highlighted-sentence .hl-safe { color: #bbf7d0; }
 :root[data-theme="dark"] .hl-legend .hl-neg {
   background: #3b0764; border-bottom-color: #c084fc;
 }
