@@ -512,6 +512,34 @@ function isInFacebookProfileCard(el) {
   return false;
 }
 
+// ── Shadow DOM — recursively find and scan every OPEN shadow root on the
+// page, instead of hardcoding a specific custom element name (previously
+// just "shreddit-comment" for Reddit). Sites built with web components
+// (Reddit's comment tree among them) render real content inside a shadow
+// root that a plain TreeWalker on document.body can't see into at all —
+// but which specific element hosts that shadow root changes whenever a
+// site updates its frontend, which is exactly what seems to have broken
+// this on Reddit. Walking for *any* shadowRoot instead of one named
+// element is more work per scan but doesn't depend on guessing a tag name
+// that can silently go stale again.
+//
+// Real limitation, not a bug: a CLOSED-mode shadow root (el.shadowRoot
+// intentionally returns null for those) is invisible to any content
+// script by browser design — there's no workaround from here if a site
+// uses that mode.
+function scanShadowRoots(root) {
+  let el;
+  try {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+    while ((el = walker.nextNode())) {
+      if (el.shadowRoot) {
+        collectByTreeWalker(el.shadowRoot);
+        scanShadowRoots(el.shadowRoot); // shadow roots can nest further shadow roots
+      }
+    }
+  } catch(e) {}
+}
+
 // ── SCAN — works on social media and websites with user content ───────────────
 function scanAll() {
   if (!_enabled) return;
@@ -519,13 +547,7 @@ function scanAll() {
 
   // Scan main document body
   collectByTreeWalker(document.body);
-
-  // Reddit shadow DOM fix
-  try {
-    document.querySelectorAll("shreddit-comment").forEach(el => {
-      if (el.shadowRoot) collectByTreeWalker(el.shadowRoot);
-    });
-  } catch(e) {}
+  scanShadowRoots(document.body);
 
   processQueue();
 }

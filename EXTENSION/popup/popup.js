@@ -192,6 +192,12 @@ document.addEventListener("DOMContentLoaded", () => {
       // Use friendly name if known, otherwise use hostname directly
       const platform = known[hostname] || hostname;
       platformBadge.textContent = platform;
+
+      _isExcludedSite = isExcludedHostname(hostname);
+      if (_isExcludedSite) {
+        platformBadge.textContent = platform + " (excluded)";
+        updateStats(0, 0); // correct any stale numbers immediately, don't wait for the next poll
+      }
     } catch(e) {
       platformBadge.textContent = "Active";
     }
@@ -234,11 +240,46 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ── Stats ──────────────────────────────────────────────────────────────────
+  // stat_total/stat_aggressive live in chrome.storage.local as GLOBAL keys,
+  // not scoped per-site — they only get reset to 0 when content.js loads on
+  // a page. On an excluded site (Messenger, Gmail, etc.) content.js never
+  // runs at all, so those numbers are just whatever was left over from the
+  // last site that WAS scanned, not anything happening on this tab. Forced
+  // to 0 here whenever the active tab is a known-excluded site, so the
+  // popup can't make it look like scanning happened somewhere it didn't.
+  let _isExcludedSite = false;
+
   function updateStats(total, aggressive) {
+    if (_isExcludedSite) { total = 0; aggressive = 0; }
     const safe = Math.max(0, total - aggressive);
     if (statTotal)      statTotal.textContent      = total;
     if (statAggressive) statAggressive.textContent = aggressive;
     if (statSafe)       statSafe.textContent       = safe;
+  }
+
+  // Reads the real exclude_matches list straight from manifest.json instead
+  // of keeping a second hardcoded copy in sync — matches "*://x.com/*" and
+  // "*://*.x.com/*" style patterns against the active tab's hostname.
+  function isExcludedHostname(hostname) {
+    try {
+      const manifest = chrome.runtime.getManifest();
+      const patterns = manifest.content_scripts?.[0]?.exclude_matches || [];
+      return patterns.some(p => {
+        const host = p.replace(/^\*:\/\//, "").replace(/\/\*$/, ""); // "*.messenger.com" or "messenger.com"
+        let reStr = host
+          .split(".")
+          .map(part => part === "*" ? "[a-z0-9-]+" : part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+          .join("\\.");
+        // A leading "*." wildcard should also match the bare domain itself
+        // (zero subdomains), not just "something.messenger.com".
+        if (host.startsWith("*.")) {
+          const bare = reStr.replace(/^\[a-z0-9-\]\+\\\./, "");
+          reStr = "(?:[a-z0-9-]+\\.)?" + bare;
+        }
+        const re = new RegExp("^" + reStr + "$", "i");
+        return re.test(hostname);
+      });
+    } catch(e) { return false; }
   }
 
   // ── Detection Log ──────────────────────────────────────────────────────────
